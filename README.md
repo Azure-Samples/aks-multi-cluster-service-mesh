@@ -16,6 +16,6 @@ products:
 
 This sample describes how to deploy applications across multiple AKS clusters by using a Service Mesh (e.g., Istio)
 
-* [AKS multi cluster with Istio](istio/Readme.md)
+* [AKS multi cluster with Istio](istio/README.md)
 
 

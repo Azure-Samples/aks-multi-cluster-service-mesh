@@ -1,0 +1,10 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  values:
+    global:
+      meshID: azure
+      multiCluster:
+        clusterName: eastus-aks
+        enabled: true
+      network: network1

@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-ingress
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - 'echoserver.echoserver.svc.cluster.local'
+#https://pkg.go.dev/istio.io/api/networking/v1beta1#ServerTLSSettings
+    tls:
+      mode: SIMPLE
+      serverCertificate: /etc/istio/ingressgateway-certs/ca-cert.pem
+      privateKey: /etc/istio/ingressgateway-certs/ca-key.pem

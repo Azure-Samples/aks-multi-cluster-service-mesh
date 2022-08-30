@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "keyvault" {
  }
 
 resource "azurerm_key_vault" "this" {
-  name                       = random_string.random.result
+  name                       = "kv-${random_string.random.result}"
   location                   = azurerm_resource_group.keyvault.location
   resource_group_name        = azurerm_resource_group.keyvault.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id

@@ -1,18 +1,20 @@
-variable "resource_group_name" {
-  description = "The resource group name to be imported"
-  type        = string
-}
-
-variable "cluster_name" {
-  description = "(Optional) The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
+variable "name_prefix" {
+  description = "(Optional) A prefix for the name of all the resource groups and resources."
   type        = string
   default     = null
+  nullable    = true
 }
 
-variable "cluster_log_analytics_workspace_name" {
-  description = "(Optional) The name of the Analytics workspace"
+variable "location_one" {
+  description = "The location of the first cluster and related resources."
   type        = string
-  default     = null
+  default     = "westeurope"
+}
+
+variable "location_two" {
+  description = "The location of the second cluster and related resources."
+  type        = string
+  default     = "eastus"
 }
 
 variable "client_id" {
@@ -33,34 +35,16 @@ variable "admin_username" {
   type        = string
 }
 
+variable "only_critical_addons_enabled" {
+  type        = bool
+  description = "(Optional) Enabling this option will taint default node pool with `CriticalAddonsOnly=true:NoSchedule` taint. Changing this forces a new resource to be created."
+  default     = null
+}
+
 variable "agents_size" {
-  default     = "Standard_D2s_v3"
+  default     = "Standard_D8a_v4"
   description = "The default virtual machine size for the Kubernetes agents"
   type        = string
-}
-
-variable "log_analytics_workspace_sku" {
-  description = "The SKU (pricing level) of the Log Analytics workspace. For new subscriptions the SKU should be set to PerGB2018"
-  type        = string
-  default     = "PerGB2018"
-}
-
-variable "log_retention_in_days" {
-  description = "The retention period for the logs in days"
-  type        = number
-  default     = 30
-}
-
-variable "agents_count" {
-  description = "The number of Agents that should exist in the Agent Pool. Please set `agents_count` `null` while `enable_auto_scaling` is `true` to avoid possible `agents_count` changes."
-  type        = number
-  default     = 2
-}
-
-variable "public_ssh_key" {
-  description = "A custom ssh key to control access to the AKS cluster"
-  type        = string
-  default     = ""
 }
 
 variable "tags" {
@@ -87,20 +71,27 @@ variable "os_disk_size_gb" {
   default     = 50
 }
 
-variable "private_cluster_enabled" {
-  description = "If true cluster API server will be exposed only on internal IP address and available only in cluster vnet."
-  type        = bool
-  default     = false
+variable "os_disk_type" {
+  type        = string
+  description = "The type of disk which should be used for the Operating System. Possible values are `Ephemeral` and `Managed`. Defaults to `Ephemeral`. Changing this forces a new resource to be created."
+  default     = "Ephemeral"
+  nullable    = false
+
+  validation {
+    condition = contains(["Ephemeral", "Managed"], var.os_disk_type)
+    error_message = "The OS disk type is incorrect."
+  }
+}
+
+variable "public_ssh_key" {
+  type        = string
+  description = "(Optional) A custom ssh key to control access to the AKS cluster. Changing this forces a new resource to be created."
+  default     = null
+  nullable    = true
 }
 
 variable "enable_kube_dashboard" {
   description = "Enable Kubernetes Dashboard."
-  type        = bool
-  default     = false
-}
-
-variable "enable_http_application_routing" {
-  description = "Enable HTTP Application Routing Addon (forces recreation)."
   type        = bool
   default     = false
 }
@@ -111,20 +102,8 @@ variable "enable_azure_policy" {
   default     = false
 }
 
-variable "sku_tier" {
-  description = "The SKU Tier that should be used for this Kubernetes Cluster. Possible values are Free and Paid"
-  type        = string
-  default     = "Free"
-}
-
 variable "enable_role_based_access_control" {
   description = "Enable Role Based Access Control."
-  type        = bool
-  default     = false
-}
-
-variable "rbac_aad_managed" {
-  description = "Is the Azure Active Directory integration Managed, meaning that Azure will create/manage the Service Principal used for integration."
   type        = bool
   default     = false
 }
@@ -153,48 +132,6 @@ variable "rbac_aad_server_app_secret" {
   default     = null
 }
 
-variable "network_plugin" {
-  description = "Network plugin to use for networking."
-  type        = string
-  default     = "kubenet"
-}
-
-variable "network_policy" {
-  description = " (Optional) Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are calico and azure. Changing this forces a new resource to be created."
-  type        = string
-  default     = null
-}
-
-variable "net_profile_dns_service_ip" {
-  description = "(Optional) IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created."
-  type        = string
-  default     = null
-}
-
-variable "net_profile_docker_bridge_cidr" {
-  description = "(Optional) IP address (in CIDR notation) used as the Docker bridge IP address on nodes. Changing this forces a new resource to be created."
-  type        = string
-  default     = null
-}
-
-variable "net_profile_outbound_type" {
-  description = "(Optional) The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer and userDefinedRouting. Defaults to loadBalancer."
-  type        = string
-  default     = "loadBalancer"
-}
-
-variable "net_profile_pod_cidr" {
-  description = " (Optional) The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet. Changing this forces a new resource to be created."
-  type        = string
-  default     = null
-}
-
-variable "net_profile_service_cidr" {
-  description = "(Optional) The Network Range used by the Kubernetes service. Changing this forces a new resource to be created."
-  type        = string
-  default     = null
-}
-
 variable "kubernetes_version" {
   description = "Specify which Kubernetes release to use. The default used is the latest Kubernetes version available in the region"
   type        = string
@@ -207,64 +144,34 @@ variable "orchestrator_version" {
   default     = null
 }
 
-variable "enable_auto_scaling" {
-  description = "Enable node pool autoscaling"
-  type        = bool
-  default     = false
-}
-
-variable "agents_max_count" {
-  type        = number
-  description = "Maximum number of nodes in a pool"
-  default     = null
-}
-
-variable "agents_min_count" {
-  type        = number
-  description = "Minimum number of nodes in a pool"
-  default     = null
-}
-
 variable "agents_pool_name" {
-  description = "The default Azure AKS agentpool (nodepool) name."
+  description = "The default node pool name."
   type        = string
-  default     = "nodepool"
+  default     = "system"
+}
+
+variable "user_agents_pool_name" {
+  description = "(Optiobal) The user node pool name."
+  type        = string
+  default     = "user"
+}
+
+variable "user_agents_labels" {
+  description = "(Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool."
+  type        = map(string)
+  default     = {}
+}
+
+variable "user_agents_taints" {
+  description = "(Optional) A list of Kubernetes taints which should be applied to nodes in the agent pool (e.g key=value:NoSchedule). Changing this forces a new resource to be created."
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_node_public_ip" {
   description = "(Optional) Should nodes in this Node Pool have a Public IP Address? Defaults to false."
   type        = bool
   default     = false
-}
-
-variable "agents_availability_zones" {
-  description = "(Optional) A list of Availability Zones across which the Node Pool should be spread. Changing this forces a new resource to be created."
-  type        = list(string)
-  default     = null
-}
-
-variable "agents_labels" {
-  description = "(Optional) A map of Kubernetes labels which should be applied to nodes in the Default Node Pool. Changing this forces a new resource to be created."
-  type        = map(string)
-  default     = {}
-}
-
-variable "agents_type" {
-  description = "(Optional) The type of Node Pool which should be created. Possible values are AvailabilitySet and VirtualMachineScaleSets. Defaults to VirtualMachineScaleSets."
-  type        = string
-  default     = "VirtualMachineScaleSets"
-}
-
-variable "agents_tags" {
-  description = "(Optional) A mapping of tags to assign to the Node Pool."
-  type        = map(string)
-  default     = {}
-}
-
-variable "agents_max_pods" {
-  description = "(Optional) The maximum number of pods that can run on each agent. Changing this forces a new resource to be created."
-  type        = number
-  default     = null
 }
 
 variable "enable_ingress_application_gateway" {
@@ -275,12 +182,6 @@ variable "enable_ingress_application_gateway" {
 
 variable "ingress_application_gateway_id" {
   description = "The ID of the Application Gateway to integrate with the ingress controller of this Kubernetes Cluster."
-  type        = string
-  default     = null
-}
-
-variable "ingress_application_gateway_name" {
-  description = "The name of the Application Gateway to be used or created in the Nodepool Resource Group, which in turn will be integrated with the ingress controller of this Kubernetes Cluster."
   type        = string
   default     = null
 }
@@ -308,14 +209,268 @@ variable "user_assigned_identity_id" {
   default     = null
 }
 
-variable "enable_host_encryption" {
-  description = "Enable Host Encryption for default node pool. Encryption at host feature must be enabled on the subscription: https://docs.microsoft.com/azure/virtual-machines/linux/disks-enable-host-based-encryption-cli"
-  type        = bool
-  default     = false
-}
-
 variable "node_resource_group" {
   description = "The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster."
   type        = string
   default     = null
+}
+
+variable "network_plugin" {
+  description = "(Required) Network plugin to use for networking. Currently supported values are azure, kubenet and none. Changing this forces a new resource to be created."
+  type        = string
+  default     = "azure"
+}
+
+variable "network_policy" {
+  description = "(Optional) Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are calico and azure. Changing this forces a new resource to be created."
+  type        = string
+  default     = "azure"
+}
+
+variable "sku_tier" {
+  description = "(Optional) The SKU Tier that should be used for this Kubernetes Cluster. Possible values are Free and Paid (which includes the Uptime SLA). Defaults to Free"
+  type        = string
+  default     = "Free"
+}
+
+variable "role_based_access_control_enabled" {
+  description = "(Optional) - Whether Role Based Access Control for the Kubernetes Cluster should be enabled. Defaults to true. Changing this forces a new resource to be created."
+  type        = bool
+  default     = true
+}
+
+variable "rbac_aad_managed" {
+  description = "(Optional) Is Role Based Access Control based on Azure AD enabled?"
+  type        = bool
+  default     = true
+}
+
+variable "private_cluster_enabled" {
+  description = "(Optional) Should this Kubernetes Cluster have its API server only exposed on internal IP addresses? This provides a Private IP Address for the Kubernetes API on the Virtual Network where the Kubernetes Cluster is located. Defaults to false. Changing this forces a new resource to be created."
+  type        = bool
+  default     = false
+}
+
+variable "http_application_routing_enabled" {
+  description = "(Optional) Should HTTP Application Routing be enabled?"
+  type        = bool
+  default     = false
+}
+
+variable "azure_policy_enabled" {
+  description = "(Optional) Should the Azure Policy Add-On be enabled?"
+  type        = bool
+  default     = true
+}
+
+variable "enable_auto_scaling" {
+  description = "(Optional) Should the Kubernetes Auto Scaler be enabled for this Node Pool? Defaults to false"
+  type        = bool
+  default     = false
+}
+
+variable "enable_host_encryption" {
+  description = "(Optional) Should the nodes in the Default Node Pool have host encryption enabled? Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "log_analytics_workspace_enabled" {
+  description = "(Optional) Should an Azure Log Analytics workspace be created to monitor the cluster using Container Insights? Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "agents_min_count" {
+  description = "(Required) The minimum number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000."
+  type        = number
+  default     = 1
+}
+
+variable "agents_max_count" {
+  description = "(Required) The maximum number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000."
+  type        = number
+  default     = 1
+}
+
+variable "agents_count" {
+  description = "(Optional) The initial number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000 and between min_count and max_count"
+  type        = number
+  default     = 1
+}
+
+variable "agents_max_pods" {
+  description = "(Optional) The maximum number of pods that can run on each agent. Changing this forces a new resource to be created."
+  type        = number
+  default     = 30
+}
+
+variable "agents_availability_zones" {
+  description = "(Optional) A list of Availability Zones across which the Node Pool should be spread. Changing this forces a new resource to be created"
+  type        = list(string)
+  default     = null
+}
+
+variable "agents_type" {
+  description = "(Optional) The type of Node Pool which should be created. Possible values are AvailabilitySet and VirtualMachineScaleSets. Defaults to VirtualMachineScaleSets."
+  type        = string
+  default     = "VirtualMachineScaleSets"
+}
+
+variable "ingress_application_gateway_enabled" {
+  description = "(Optional) Whether to deploy the Application Gateway ingress controller to this Kubernetes Cluster."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "ingress_application_gateway_name" {
+  description = "(Optional) The name of the Application Gateway to be used or created in the Nodepool Resource Group, which in turn will be integrated with the ingress controller of this Kubernetes Cluster."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "net_profile_dns_service_ip" {
+  description = "(Optional) IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created."
+  type        = string
+  default     = "172.16.0.10"
+}
+
+variable "net_profile_docker_bridge_cidr" {
+  description = "(Optional) IP address (in CIDR notation) used as the Docker bridge IP address on nodes. Changing this forces a new resource to be created."
+  type        = string
+  default     = "172.17.0.1/16"
+}
+
+variable "net_profile_outbound_type" {
+  description = "(Optional) The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer and userDefinedRouting. Defaults to loadBalancer."
+   type        = string
+  default     = "loadBalancer"
+}
+
+variable "net_profile_pod_cidr" {
+  description = " (Optional) The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet. Changing this forces a new resource to be created."
+  type        = string
+  default     = null
+}
+
+variable "net_profile_service_cidr" {
+  description = "(Optional) The Network Range used by the Kubernetes service. Changing this forces a new resource to be created."
+  type        = string
+  default     = "172.16.0.0/16"
+}
+
+variable "key_vault_secrets_provider_enabled" {
+  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "secret_rotation_enabled" {
+  description = "Is secret rotation enabled? This variable is only used when `key_vault_secrets_provider_enabled` is `true` and defaults to `false`."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "secret_rotation_interval" {
+  description = "The interval to poll for secret rotation. This attribute is only set when `secret_rotation` is `true` and defaults to `2m`."
+  type        = string
+  default     = "2m"
+  nullable    = false
+}
+
+variable "agents_labels" {
+  description = "(Optional) A map of Kubernetes labels which should be applied to nodes in the Default Node Pool. Changing this forces a new resource to be created."
+  type        = map(string)
+  default     = {}
+}
+
+variable "agents_tags" {
+  description = "(Optional) A mapping of tags to assign to the Node Pool."
+   type        = map(string)
+  default     = {}
+}
+
+variable "acr_sku" {
+  description = "(Required) Specifies the SKU of the Azure Container Registry."
+  type        = string
+  default     = "Basic"
+
+  validation {
+    condition = contains(["Basic", "Standard", "Premium"], var.acr_sku)
+    error_message = "The container registry sku is invalid."
+  }
+}
+
+variable "log_analytics_workspace_sku" {
+  description = "(Optional) Specifies the sku of the log analytics workspace."
+  type = string
+  default = "PerGB2018"
+  
+  validation {
+    condition = contains(["Free", "Standalone", "PerNode", "PerGB2018"], var.log_analytics_workspace_sku)
+    error_message = "The log analytics sku is incorrect."
+  }
+}
+
+variable "log_analytics_worspace_retention_days" {
+  description = " (Optional) The workspace data retention in days. Possible values are either 7 (Free Tier only) or range between 30 and 730."
+  type        = number
+  default     = 30
+}
+
+variable "vnet_one_address_space" {
+  description = "(Required) Specifies the address prefix of the first Azure virtual network."
+  type        = list(string)
+  default     =  ["10.52.0.0/16"]
+}
+
+variable "vnet_two_address_space" {
+  description = "(Required) Specifies the address prefix of the second Azure virtual network."
+  type        = list(string)
+  default     =  ["10.53.0.0/16"]
+}
+
+variable "vnet_one_subnet_prefixes" {
+  description = "(Required) The address prefixes to use for the subnets of the first Azure virtual network."
+  type        = list(string)
+  default     = ["10.52.0.0/24", "10.52.1.0/24", "10.52.2.0/24", "10.52.3.0/24", "10.52.4.0/24"]
+}
+
+variable "vnet_two_subnet_prefixes" {
+  description = "(Required) The address prefixes to use for the subnets of the second Azure virtual network."
+  type        = list(string)
+  default     = ["10.53.0.0/24", "10.53.1.0/24", "10.53.2.0/24", "10.53.3.0/24", "10.53.4.0/24"]
+}
+
+variable "vnet_one_subnet_names" {
+  description = "(Required) The names to use for the subnets of the first Azure virtual network."
+  type        = list(string)
+  default     = ["System", "User", "AppGateway", "AzureBastionSubnet", "PrivateEndpoints"]
+}
+
+variable "vnet_two_subnet_names" {
+  description = "(Required) The names to use for the subnets of the second Azure virtual network."
+  type        = list(string)
+  default     = ["System", "User", "AppGateway", "AzureBastionSubnet", "PrivateEndpoints"]
+}
+
+variable "key_vault_sku" {
+  description = "(Required) The Name of the SKU used for this Key Vault. Possible values are standard and premium."
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition = contains(["standard", "premium" ], var.key_vault_sku)
+    error_message = "The sku name of the key vault is invalid."
+  }
+}
+
+variable "bastion_host_enabled" {
+  description = "(Optional) Specifies whether creating Azure Bastion Host for virtual networks."
+  type        = bool
+  default     = true
 }

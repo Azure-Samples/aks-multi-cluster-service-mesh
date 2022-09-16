@@ -6,34 +6,34 @@ resource "random_string" "random" {
 }
 
 module "aks_one" {
-  source                                = "git::https://github.com/Azure/terraform-azurerm-aks.git"
-  resource_group_name                   = azurerm_resource_group.resource_group_one.name
-  kubernetes_version                    = var.kubernetes_version
-  orchestrator_version                  = var.orchestrator_version
-  cluster_name                          = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
-  prefix                                = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
-  location                              = var.location_one
-  identity_type                         = var.identity_type
-  identity_ids                          = [azurerm_user_assigned_identity.aks_identity_one.id]
-  network_plugin                        = var.network_plugin
-  network_policy                        = var.network_policy
-  vnet_subnet_id                        = module.network_one.vnet_subnets[0]
-  os_disk_size_gb                       = var.os_disk_size_gb
-  os_disk_type                          = var.os_disk_type
-  admin_username                        = var.admin_username
-  public_ssh_key                        = var.public_ssh_key
-  only_critical_addons_enabled          = var.only_critical_addons_enabled
-  sku_tier                              = var.sku_tier
-  role_based_access_control_enabled     = var.role_based_access_control_enabled
-  rbac_aad_admin_group_object_ids       = var.rbac_aad_admin_group_object_ids
-  rbac_aad_managed                      = var.rbac_aad_managed
-  private_cluster_enabled               = var.private_cluster_enabled
-  http_application_routing_enabled      = var.http_application_routing_enabled
-  azure_policy_enabled                  = var.azure_policy_enabled
-  enable_auto_scaling                   = var.enable_auto_scaling
-  enable_host_encryption                = var.enable_host_encryption
-  log_analytics_workspace_enabled       = var.log_analytics_workspace_enabled
-  log_analytics_workspace               = {
+  source                            = "git::https://github.com/Azure/terraform-azurerm-aks.git"
+  resource_group_name               = azurerm_resource_group.resource_group_one.name
+  kubernetes_version                = var.kubernetes_version
+  orchestrator_version              = var.orchestrator_version
+  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
+  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
+  location                          = var.location_one
+  identity_type                     = var.identity_type
+  identity_ids                      = [azurerm_user_assigned_identity.aks_identity_one.id]
+  network_plugin                    = var.network_plugin
+  network_policy                    = var.network_policy
+  vnet_subnet_id                    = module.network_one.vnet_subnets[0]
+  os_disk_size_gb                   = var.os_disk_size_gb
+  os_disk_type                      = var.os_disk_type
+  admin_username                    = var.admin_username
+  public_ssh_key                    = var.public_ssh_key
+  only_critical_addons_enabled      = var.only_critical_addons_enabled
+  sku_tier                          = var.sku_tier
+  role_based_access_control_enabled = var.role_based_access_control_enabled
+  rbac_aad_admin_group_object_ids   = var.rbac_aad_admin_group_object_ids
+  rbac_aad_managed                  = var.rbac_aad_managed
+  private_cluster_enabled           = var.private_cluster_enabled
+  http_application_routing_enabled  = var.http_application_routing_enabled
+  azure_policy_enabled              = var.azure_policy_enabled
+  enable_auto_scaling               = var.enable_auto_scaling
+  enable_host_encryption            = var.enable_host_encryption
+  log_analytics_workspace_enabled   = var.log_analytics_workspace_enabled
+  log_analytics_workspace = {
     id   = azurerm_log_analytics_workspace.log_analytics_workspace_one.id
     name = azurerm_log_analytics_workspace.log_analytics_workspace_one.name
   }
@@ -48,7 +48,7 @@ module "aks_one" {
   agents_type                           = var.agents_type
   agents_size                           = var.agents_size
   ingress_application_gateway_enabled   = var.ingress_application_gateway_enabled
-  ingress_application_gateway_name      = var.ingress_application_gateway_name == null ? "aks-appgw-${var.location_one}" : var.ingress_application_gateway_name  
+  ingress_application_gateway_name      = var.ingress_application_gateway_name == null ? "aks-appgw-${var.location_one}" : var.ingress_application_gateway_name
   ingress_application_gateway_subnet_id = module.network_one.vnet_subnets[2]
   net_profile_dns_service_ip            = var.net_profile_dns_service_ip
   net_profile_docker_bridge_cidr        = var.net_profile_docker_bridge_cidr
@@ -64,34 +64,34 @@ module "aks_one" {
 }
 
 module "aks_two" {
-  source                                = "git::https://github.com/Azure/terraform-azurerm-aks.git"
-  resource_group_name                   = azurerm_resource_group.resource_group_two.name
-  kubernetes_version                    = var.kubernetes_version
-  orchestrator_version                  = var.orchestrator_version
-  cluster_name                          = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
-  prefix                                = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
-  location                              = var.location_two
-  identity_type                         = var.identity_type
-  identity_ids                          = [azurerm_user_assigned_identity.aks_identity_two.id]
-  network_plugin                        = var.network_plugin
-  network_policy                        = var.network_policy
-  vnet_subnet_id                        = module.network_two.vnet_subnets[0]
-  os_disk_size_gb                       = var.os_disk_size_gb
-  os_disk_type                          = var.os_disk_type
-  admin_username                        = var.admin_username
-  public_ssh_key                        = var.public_ssh_key
-  only_critical_addons_enabled          = var.only_critical_addons_enabled
-  sku_tier                              = var.sku_tier
-  role_based_access_control_enabled     = var.role_based_access_control_enabled
-  rbac_aad_admin_group_object_ids       = var.rbac_aad_admin_group_object_ids
-  rbac_aad_managed                      = var.rbac_aad_managed
-  private_cluster_enabled               = var.private_cluster_enabled
-  http_application_routing_enabled      = var.http_application_routing_enabled
-  azure_policy_enabled                  = var.azure_policy_enabled
-  enable_auto_scaling                   = var.enable_auto_scaling
-  enable_host_encryption                = var.enable_host_encryption
-  log_analytics_workspace_enabled       = var.log_analytics_workspace_enabled
-  log_analytics_workspace               = {
+  source                            = "git::https://github.com/Azure/terraform-azurerm-aks.git"
+  resource_group_name               = azurerm_resource_group.resource_group_two.name
+  kubernetes_version                = var.kubernetes_version
+  orchestrator_version              = var.orchestrator_version
+  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
+  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
+  location                          = var.location_two
+  identity_type                     = var.identity_type
+  identity_ids                      = [azurerm_user_assigned_identity.aks_identity_two.id]
+  network_plugin                    = var.network_plugin
+  network_policy                    = var.network_policy
+  vnet_subnet_id                    = module.network_two.vnet_subnets[0]
+  os_disk_size_gb                   = var.os_disk_size_gb
+  os_disk_type                      = var.os_disk_type
+  admin_username                    = var.admin_username
+  public_ssh_key                    = var.public_ssh_key
+  only_critical_addons_enabled      = var.only_critical_addons_enabled
+  sku_tier                          = var.sku_tier
+  role_based_access_control_enabled = var.role_based_access_control_enabled
+  rbac_aad_admin_group_object_ids   = var.rbac_aad_admin_group_object_ids
+  rbac_aad_managed                  = var.rbac_aad_managed
+  private_cluster_enabled           = var.private_cluster_enabled
+  http_application_routing_enabled  = var.http_application_routing_enabled
+  azure_policy_enabled              = var.azure_policy_enabled
+  enable_auto_scaling               = var.enable_auto_scaling
+  enable_host_encryption            = var.enable_host_encryption
+  log_analytics_workspace_enabled   = var.log_analytics_workspace_enabled
+  log_analytics_workspace = {
     id   = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
     name = azurerm_log_analytics_workspace.log_analytics_workspace_two.name
   }
@@ -106,7 +106,7 @@ module "aks_two" {
   agents_type                           = var.agents_type
   agents_size                           = var.agents_size
   ingress_application_gateway_enabled   = var.ingress_application_gateway_enabled
-  ingress_application_gateway_name      = var.ingress_application_gateway_name == null ? "aks-appgw-${var.location_two}" : var.ingress_application_gateway_name  
+  ingress_application_gateway_name      = var.ingress_application_gateway_name == null ? "aks-appgw-${var.location_two}" : var.ingress_application_gateway_name
   ingress_application_gateway_subnet_id = module.network_two.vnet_subnets[2]
   net_profile_dns_service_ip            = var.net_profile_dns_service_ip
   net_profile_docker_bridge_cidr        = var.net_profile_docker_bridge_cidr
@@ -131,7 +131,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks_one_diagnostics_settings" {
     enabled  = true
 
     retention_policy {
-      enabled = true  
+      enabled = true
     }
   }
 
@@ -244,7 +244,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks_two_diagnostics_settings" {
     enabled  = true
 
     retention_policy {
-      enabled = true  
+      enabled = true
     }
   }
 

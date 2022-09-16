@@ -78,7 +78,7 @@ variable "os_disk_type" {
   nullable    = false
 
   validation {
-    condition = contains(["Ephemeral", "Managed"], var.os_disk_type)
+    condition     = contains(["Ephemeral", "Managed"], var.os_disk_type)
     error_message = "The OS disk type is incorrect."
   }
 }
@@ -345,7 +345,7 @@ variable "net_profile_docker_bridge_cidr" {
 
 variable "net_profile_outbound_type" {
   description = "(Optional) The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer and userDefinedRouting. Defaults to loadBalancer."
-   type        = string
+  type        = string
   default     = "loadBalancer"
 }
 
@@ -390,7 +390,7 @@ variable "agents_labels" {
 
 variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
-   type        = map(string)
+  type        = map(string)
   default     = {}
 }
 
@@ -400,18 +400,18 @@ variable "acr_sku" {
   default     = "Basic"
 
   validation {
-    condition = contains(["Basic", "Standard", "Premium"], var.acr_sku)
+    condition     = contains(["Basic", "Standard", "Premium"], var.acr_sku)
     error_message = "The container registry sku is invalid."
   }
 }
 
 variable "log_analytics_workspace_sku" {
   description = "(Optional) Specifies the sku of the log analytics workspace."
-  type = string
-  default = "PerGB2018"
-  
+  type        = string
+  default     = "PerGB2018"
+
   validation {
-    condition = contains(["Free", "Standalone", "PerNode", "PerGB2018"], var.log_analytics_workspace_sku)
+    condition     = contains(["Free", "Standalone", "PerNode", "PerGB2018"], var.log_analytics_workspace_sku)
     error_message = "The log analytics sku is incorrect."
   }
 }
@@ -425,13 +425,13 @@ variable "log_analytics_worspace_retention_days" {
 variable "vnet_one_address_space" {
   description = "(Required) Specifies the address prefix of the first Azure virtual network."
   type        = list(string)
-  default     =  ["10.52.0.0/16"]
+  default     = ["10.52.0.0/16"]
 }
 
 variable "vnet_two_address_space" {
   description = "(Required) Specifies the address prefix of the second Azure virtual network."
   type        = list(string)
-  default     =  ["10.53.0.0/16"]
+  default     = ["10.53.0.0/16"]
 }
 
 variable "vnet_one_subnet_prefixes" {
@@ -464,7 +464,7 @@ variable "key_vault_sku" {
   default     = "standard"
 
   validation {
-    condition = contains(["standard", "premium" ], var.key_vault_sku)
+    condition     = contains(["standard", "premium"], var.key_vault_sku)
     error_message = "The sku name of the key vault is invalid."
   }
 }

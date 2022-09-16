@@ -8,7 +8,7 @@ resource "azurerm_log_analytics_workspace" "log_analytics_workspace_one" {
 
   lifecycle {
     ignore_changes = [
-        tags
+      tags
     ]
   }
 }
@@ -23,7 +23,7 @@ resource "azurerm_log_analytics_workspace" "log_analytics_workspace_two" {
 
   lifecycle {
     ignore_changes = [
-        tags
+      tags
     ]
   }
 }

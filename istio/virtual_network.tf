@@ -2,9 +2,9 @@ module "network_one" {
   source              = "Azure/network/azurerm"
   vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-vnet" : "${var.name_prefix}-${var.location_one}-vnet"
   resource_group_name = azurerm_resource_group.resource_group_one.name
-  address_spaces       = var.vnet_one_address_space
+  address_spaces      = var.vnet_one_address_space
   subnet_prefixes     = var.vnet_one_subnet_prefixes
-  subnet_names        = var.vnet_one_subnet_names 
+  subnet_names        = var.vnet_one_subnet_names
   depends_on          = [azurerm_resource_group.resource_group_one]
   subnet_enforce_private_link_endpoint_network_policies = {
     "subnet1" : true
@@ -15,9 +15,9 @@ module "network_two" {
   source              = "Azure/network/azurerm"
   vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-vnet" : "${var.name_prefix}-${var.location_two}-vnet"
   resource_group_name = azurerm_resource_group.resource_group_two.name
-  address_spaces       = var.vnet_two_address_space
+  address_spaces      = var.vnet_two_address_space
   subnet_prefixes     = var.vnet_two_subnet_prefixes
-  subnet_names        = var.vnet_two_subnet_names 
+  subnet_names        = var.vnet_two_subnet_names
   depends_on          = [azurerm_resource_group.resource_group_two]
   subnet_enforce_private_link_endpoint_network_policies = {
     "subnet1" : true

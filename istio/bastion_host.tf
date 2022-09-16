@@ -9,9 +9,9 @@ resource "azurerm_public_ip" "public_ip_one" {
   tags                = var.tags
 
   lifecycle {
-      ignore_changes = [
-          tags
-      ]
+    ignore_changes = [
+      tags
+    ]
   }
 }
 
@@ -30,9 +30,9 @@ resource "azurerm_bastion_host" "bastion_host_one" {
   }
 
   lifecycle {
-      ignore_changes = [
-          tags
-      ]
+    ignore_changes = [
+      tags
+    ]
   }
 
   depends_on = [
@@ -119,9 +119,9 @@ resource "azurerm_public_ip" "public_ip_two" {
   tags                = var.tags
 
   lifecycle {
-      ignore_changes = [
-          tags
-      ]
+    ignore_changes = [
+      tags
+    ]
   }
 }
 
@@ -140,9 +140,9 @@ resource "azurerm_bastion_host" "bastion_host_two" {
   }
 
   lifecycle {
-      ignore_changes = [
-          tags
-      ]
+    ignore_changes = [
+      tags
+    ]
   }
 
   depends_on = [
@@ -177,7 +177,7 @@ resource "azurerm_monitor_diagnostic_setting" "bastion_host_two_diagnostics_sett
 
 resource "azurerm_monitor_diagnostic_setting" "public_ip_two_diagnostics_settings" {
   count = var.bastion_host_enabled ? 1 : 0
-  
+
   name                       = "diagnostics-settings"
   target_resource_id         = azurerm_public_ip.public_ip_two[0].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two.id

@@ -38,7 +38,7 @@ resource "azurerm_container_registry" "container_registry" {
 
   lifecycle {
     ignore_changes = [
-        tags
+      tags
     ]
   }
 }

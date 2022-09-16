@@ -6,7 +6,8 @@ resource "random_string" "random" {
 }
 
 module "aks_one" {
-  source                            = "git::https://github.com/Azure/terraform-azurerm-aks.git"
+  source                            = "Azure/aks/azurerm"
+  version                           = "6.0.0"
   resource_group_name               = azurerm_resource_group.resource_group_one.name
   kubernetes_version                = var.kubernetes_version
   orchestrator_version              = var.orchestrator_version
@@ -64,7 +65,8 @@ module "aks_one" {
 }
 
 module "aks_two" {
-  source                            = "git::https://github.com/Azure/terraform-azurerm-aks.git"
+  source                            = "Azure/aks/azurerm"
+  version                           = "6.0.0"
   resource_group_name               = azurerm_resource_group.resource_group_two.name
   kubernetes_version                = var.kubernetes_version
   orchestrator_version              = var.orchestrator_version

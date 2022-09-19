@@ -2,7 +2,7 @@
 admin_username                      = "azadmin"
 public_ssh_key                      = ""
 agents_size                         = "Standard_D8a_v4"
-rbac_aad_admin_group_object_ids     = ["6e5de8c1-5a4b-409b-994f-0706e4403b77", "78761057-c58c-44b7-aaa7-ce1639c6c4f5"]
+rbac_aad_admin_group_object_ids     = []
 identity_type                       = "UserAssigned"
 kubernetes_version                  = "1.23.5"
 orchestrator_version                = "1.23.5"

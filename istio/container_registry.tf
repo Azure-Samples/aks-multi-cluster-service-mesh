@@ -28,7 +28,7 @@ resource "azurerm_container_registry" "container_registry" {
   }
 
   dynamic "georeplications" {
-    for_each = [var.location_two]
+    for_each = var.location_one != var.location_two ? [var.location_two] : []
 
     content {
       location = georeplications.value

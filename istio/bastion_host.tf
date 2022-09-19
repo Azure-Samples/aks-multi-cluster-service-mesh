@@ -3,7 +3,7 @@ resource "azurerm_public_ip" "public_ip_one" {
 
   name                = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-bastion-host-public-ip" : "${var.name_prefix}-${var.location_one}-bastion-host-public-ip"
   location            = var.location_one
-  resource_group_name = azurerm_resource_group.resource_group_one.name
+  resource_group_name = var.location_one != var.location_two ? azurerm_resource_group.resource_group_one.name : azurerm_resource_group.resource_group_shared.name
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = var.tags
@@ -20,7 +20,7 @@ resource "azurerm_bastion_host" "bastion_host_one" {
 
   name                = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-bastion-host" : "${var.name_prefix}-${var.location_one}-bastion-host"
   location            = var.location_one
-  resource_group_name = azurerm_resource_group.resource_group_one.name
+  resource_group_name = var.location_one != var.location_two ? azurerm_resource_group.resource_group_one.name : azurerm_resource_group.resource_group_shared.name
   tags                = var.tags
 
   ip_configuration {
@@ -109,7 +109,7 @@ resource "azurerm_monitor_diagnostic_setting" "public_ip_one_diagnostics_setting
 }
 
 resource "azurerm_public_ip" "public_ip_two" {
-  count = var.bastion_host_enabled ? 1 : 0
+  count = var.bastion_host_enabled && var.location_one != var.location_two ? 1 : 0
 
   name                = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-bastion-host-public-ip" : "${var.name_prefix}-${var.location_two}-bastion-host-public-ip"
   location            = var.location_two
@@ -126,7 +126,7 @@ resource "azurerm_public_ip" "public_ip_two" {
 }
 
 resource "azurerm_bastion_host" "bastion_host_two" {
-  count = var.bastion_host_enabled ? 1 : 0
+  count = var.bastion_host_enabled && var.location_one != var.location_two ? 1 : 0
 
   name                = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-bastion-host" : "${var.name_prefix}-${var.location_two}-bastion-host"
   location            = var.location_two
@@ -151,11 +151,11 @@ resource "azurerm_bastion_host" "bastion_host_two" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "bastion_host_two_diagnostics_settings" {
-  count = var.bastion_host_enabled ? 1 : 0
+  count = var.bastion_host_enabled && var.location_one != var.location_two ? 1 : 0
 
   name                       = "diagnostics-settings"
   target_resource_id         = azurerm_bastion_host.bastion_host_two[0].id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id
 
   log {
     category = "BastionAuditLogs"
@@ -176,11 +176,11 @@ resource "azurerm_monitor_diagnostic_setting" "bastion_host_two_diagnostics_sett
 }
 
 resource "azurerm_monitor_diagnostic_setting" "public_ip_two_diagnostics_settings" {
-  count = var.bastion_host_enabled ? 1 : 0
+  count = var.bastion_host_enabled && var.location_one != var.location_two ? 1 : 0
 
   name                       = "diagnostics-settings"
   target_resource_id         = azurerm_public_ip.public_ip_two[0].id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id
 
   log {
     category = "DDoSProtectionNotifications"

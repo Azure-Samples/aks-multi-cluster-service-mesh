@@ -108,6 +108,12 @@ variable "enable_role_based_access_control" {
   default     = false
 }
 
+variable "rbac_aad_azure_rbac_enabled" {
+  description = "(Optional) Is Role Based Access Control based on Azure AD enabled?"
+  type        = bool
+  default     = false
+}
+
 variable "rbac_aad_admin_group_object_ids" {
   description = "Object ID of groups with admin access."
   type        = list(string)
@@ -443,7 +449,7 @@ variable "vnet_one_subnet_prefixes" {
 variable "vnet_two_subnet_prefixes" {
   description = "(Required) The address prefixes to use for the subnets of the second Azure virtual network."
   type        = list(string)
-  default     = ["10.53.0.0/24", "10.53.1.0/24", "10.53.2.0/24", "10.53.3.0/24", "10.53.4.0/24"]
+  default     = ["10.53.0.0/24", "10.53.1.0/24", "10.53.2.0/24", "10.53.3.0/24"]
 }
 
 variable "vnet_one_subnet_names" {
@@ -455,7 +461,7 @@ variable "vnet_one_subnet_names" {
 variable "vnet_two_subnet_names" {
   description = "(Required) The names to use for the subnets of the second Azure virtual network."
   type        = list(string)
-  default     = ["System", "User", "AppGateway", "AzureBastionSubnet", "PrivateEndpoints"]
+  default     = ["System", "User", "AppGateway", "AzureBastionSubnet"]
 }
 
 variable "key_vault_sku" {

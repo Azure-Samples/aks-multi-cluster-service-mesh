@@ -7,12 +7,11 @@ resource "random_string" "random" {
 
 module "aks_one" {
   source                            = "Azure/aks/azurerm"
-  version                           = "6.0.0"
   resource_group_name               = azurerm_resource_group.resource_group_one.name
   kubernetes_version                = var.kubernetes_version
   orchestrator_version              = var.orchestrator_version
-  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
-  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}" : "${var.name_prefix}-${var.location_one}"
+  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-aks-one" : "${var.name_prefix}-${var.location_one}-aks-one"
+  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-aks-one" : "${var.name_prefix}-${var.location_one}-aks-one"
   location                          = var.location_one
   identity_type                     = var.identity_type
   identity_ids                      = [azurerm_user_assigned_identity.aks_identity_one.id]
@@ -26,6 +25,7 @@ module "aks_one" {
   only_critical_addons_enabled      = var.only_critical_addons_enabled
   sku_tier                          = var.sku_tier
   role_based_access_control_enabled = var.role_based_access_control_enabled
+  rbac_aad_azure_rbac_enabled       = var.rbac_aad_azure_rbac_enabled
   rbac_aad_admin_group_object_ids   = var.rbac_aad_admin_group_object_ids
   rbac_aad_managed                  = var.rbac_aad_managed
   private_cluster_enabled           = var.private_cluster_enabled
@@ -38,7 +38,7 @@ module "aks_one" {
     id   = azurerm_log_analytics_workspace.log_analytics_workspace_one.id
     name = azurerm_log_analytics_workspace.log_analytics_workspace_one.name
   }
-  log_analytics_solution_id             = null
+  log_analytics_solution_id             = "placeholder" #azurerm_log_analytics_solution.container_insights_solution_one.id
   agents_min_count                      = var.agents_min_count
   agents_max_count                      = var.agents_max_count
   agents_count                          = var.agents_count # Please set `agents_count` `null` while `enable_auto_scaling` is `true` to avoid possible `agents_count` changes.
@@ -66,12 +66,11 @@ module "aks_one" {
 
 module "aks_two" {
   source                            = "Azure/aks/azurerm"
-  version                           = "6.0.0"
   resource_group_name               = azurerm_resource_group.resource_group_two.name
   kubernetes_version                = var.kubernetes_version
   orchestrator_version              = var.orchestrator_version
-  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
-  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}" : "${var.name_prefix}-${var.location_two}"
+  cluster_name                      = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-aks-two" : "${var.name_prefix}-${var.location_two}-aks-two"
+  prefix                            = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-aks-two" : "${var.name_prefix}-${var.location_two}-aks-two"
   location                          = var.location_two
   identity_type                     = var.identity_type
   identity_ids                      = [azurerm_user_assigned_identity.aks_identity_two.id]
@@ -85,6 +84,7 @@ module "aks_two" {
   only_critical_addons_enabled      = var.only_critical_addons_enabled
   sku_tier                          = var.sku_tier
   role_based_access_control_enabled = var.role_based_access_control_enabled
+  rbac_aad_azure_rbac_enabled       = var.rbac_aad_azure_rbac_enabled
   rbac_aad_admin_group_object_ids   = var.rbac_aad_admin_group_object_ids
   rbac_aad_managed                  = var.rbac_aad_managed
   private_cluster_enabled           = var.private_cluster_enabled
@@ -94,10 +94,10 @@ module "aks_two" {
   enable_host_encryption            = var.enable_host_encryption
   log_analytics_workspace_enabled   = var.log_analytics_workspace_enabled
   log_analytics_workspace = {
-    id   = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
-    name = azurerm_log_analytics_workspace.log_analytics_workspace_two.name
+    id   = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id : azurerm_log_analytics_workspace.log_analytics_workspace_one.id
+    name = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].name : azurerm_log_analytics_workspace.log_analytics_workspace_one.name
   }
-  log_analytics_solution_id             = null
+  log_analytics_solution_id             = "placeholder" #var.location_one != var.location_two ? azurerm_log_analytics_solution.container_insights_solution_two[0].id : azurerm_log_analytics_solution.container_insights_solution_one.id
   agents_min_count                      = var.agents_min_count
   agents_max_count                      = var.agents_max_count
   agents_count                          = var.agents_count # Please set `agents_count` `null` while `enable_auto_scaling` is `true` to avoid possible `agents_count` changes.
@@ -239,7 +239,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks_one_diagnostics_settings" {
 resource "azurerm_monitor_diagnostic_setting" "aks_two_diagnostics_settings" {
   name                       = "diagnostics-settings"
   target_resource_id         = module.aks_two.aks_id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
+  log_analytics_workspace_id = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id : azurerm_log_analytics_workspace.log_analytics_workspace_one.id
 
   log {
     category = "kube-apiserver"

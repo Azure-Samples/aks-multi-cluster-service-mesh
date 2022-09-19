@@ -1,6 +1,6 @@
 module "network_one" {
   source              = "Azure/network/azurerm"
-  vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-vnet" : "${var.name_prefix}-${var.location_one}-vnet"
+  vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-vnet-one" : "${var.name_prefix}-${var.location_one}-vnet-one"
   resource_group_name = azurerm_resource_group.resource_group_one.name
   address_spaces      = var.vnet_one_address_space
   subnet_prefixes     = var.vnet_one_subnet_prefixes
@@ -13,7 +13,7 @@ module "network_one" {
 
 module "network_two" {
   source              = "Azure/network/azurerm"
-  vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-vnet" : "${var.name_prefix}-${var.location_two}-vnet"
+  vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-vnet-two" : "${var.name_prefix}-${var.location_two}-vnet-two"
   resource_group_name = azurerm_resource_group.resource_group_two.name
   address_spaces      = var.vnet_two_address_space
   subnet_prefixes     = var.vnet_two_subnet_prefixes
@@ -79,7 +79,7 @@ resource "azurerm_monitor_diagnostic_setting" "vnet_one_diagnostics_settings" {
 resource "azurerm_monitor_diagnostic_setting" "vnet_two_diagnostics_settings" {
   name                       = "diagnostics-settings"
   target_resource_id         = module.network_two.vnet_id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace_two.id
+  log_analytics_workspace_id = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id : azurerm_log_analytics_workspace.log_analytics_workspace_one.id
 
   log {
     category = "VMProtectionAlerts"

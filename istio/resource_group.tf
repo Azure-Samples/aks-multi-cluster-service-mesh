@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "resource_group_one" {
-  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_one, "rg"])
+  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_one, "one", "rg"])
   location = var.location_one
   tags     = var.tags
 
@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "resource_group_one" {
 }
 
 resource "azurerm_resource_group" "resource_group_two" {
-  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_two, "rg"])
+  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_two, "two", "rg"])
   location = var.location_two
   tags     = var.tags
 
@@ -23,7 +23,7 @@ resource "azurerm_resource_group" "resource_group_two" {
 }
 
 resource "azurerm_resource_group" "resource_group_shared" {
-  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, "shared", "rg"])
+  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_two, "shared", "rg"])
   location = var.location_one
   tags     = var.tags
 

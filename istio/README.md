@@ -40,9 +40,9 @@ The Istio CA is managed offline and the cluster certificates are stored in Azure
 To run the Terraform code:
 
 ```sh
-cp  tfvars .tfvars
-vim .tfvars #customize if needed
-terraform init -upgrade && terraform apply -var-file=.tfvars
+cp  terraform .tfvars
+vim terraform.tfvars #customize if needed
+terraform init -upgrade && terraform apply -var-file=terraform.tfvars
 ```
 
 Get clusters credentials:

@@ -53,7 +53,7 @@ tags = {
   servicemesh = "Istio"
 }
 acr_sku                               = "Premium"
-log_analytics_workspace_sku           = "PerNode"
+log_analytics_workspace_sku           = "PerGB2018"
 log_analytics_worspace_retention_days = 30
 vnet_one_address_space                = ["10.52.0.0/16"]
 vnet_two_address_space                = ["10.53.0.0/16"]

@@ -127,6 +127,7 @@ az keyvault certificate import \
   --file ca-cert-and-key.pem );
 done
 ```
+
 **NOTE**:
 > If the `az keyvault certificate import` step fails complaining about the PEM format, try the workaround published [here](https://github.com/Azure/azure-cli/issues/8099#issuecomment-795180979).
 

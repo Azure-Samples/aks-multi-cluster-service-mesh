@@ -112,8 +112,8 @@ Combine the cluster certificate and the key in a single file and upload the cert
 ```sh
 aksClusterOneName="<aks-cluster-one-name>"
 aksClusterTwoName="<aks-cluster-two-name>"
-
 clusters=($aksClusterOneName $aksClusterTwoName)
+
 for cluster in ${clusters[@]} ; do
 (cd $cluster &&
 cat ca-cert.pem ca-key.pem > ca-cert-and-key.pem &&
@@ -141,8 +141,8 @@ Run these commands from your Terraform folder:
 ```sh
 aksClusterOneName="<aks-cluster-one-name>"
 aksClusterTwoName="<aks-cluster-two-name>"
-
 clusters=($aksClusterOneName $aksClusterTwoName)
+
 for cluster in ${clusters[@]} ; do 
   kubectl create --context=$cluster namespace istio-system; 
 done

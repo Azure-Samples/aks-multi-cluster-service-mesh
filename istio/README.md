@@ -48,15 +48,27 @@ terraform init -upgrade && terraform apply -var-file=terraform.tfvars
 Get clusters credentials:
 
 ```sh
-az aks get-credentials --resource-group <prefix>-<region>-one-rg --name <aks-cluster-one-name>
-az aks get-credentials --resource-group istio-aks_two --name <aks-cluster-two-name>
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+aksClusterOneResourceGroupName="<aks-cluster-one-resource-group-name>"
+aksClusterTwoResourceGroupName="<aks-cluster-two-resource-group-name>"
+
+az aks get-credentials \
+  --resource-group $aksClusterOneResourceGroupName \
+  --name $aksClusterOneName
+az aks get-credentials \
+  --resource-group $aksClusterTwoResourceGroupName \
+  --name $aksClusterTwoName
 ```
 
 Test credentials:
 
 ```sh
-kubectl --context=<aks-cluster-two-name> get nodes
-kubectl --context=<aks-cluster-one-name> get nodes
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+
+kubectl --context=$aksClusterOneName get nodes
+kubectl --context=$aksClusterTwoName get nodes
 ```
 
 ## Istio CA
@@ -86,7 +98,9 @@ Now we can proceed to store the cluster certificates we created at the previous 
 Store the CA Certificate first: we are going to store only the certificate and not the private key that we want to keep offline:
 
 ```sh
-export keyVaultName=$(az keyvault list --resource-group <prefix>-<region>-shared-rg --query [].name --output tsv)
+sharedResourceGroupName="..."
+
+export keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
 az keyvault secret set \
   --vault-name $keyVaultName \
   --name root-cert \
@@ -96,7 +110,10 @@ az keyvault secret set \
 Combine the cluster certificate and the key in a single file and upload the certificate to Azure Key Vault:
 
 ```sh
-clusters=("<aks-cluster-two-name>" "<aks-cluster-one-name>")
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+
+clusters=($aksClusterOneName $aksClusterTwoName)
 for cluster in ${clusters[@]} ; do
 (cd $cluster &&
 cat ca-cert.pem ca-key.pem > ca-cert-and-key.pem &&
@@ -122,12 +139,15 @@ The `SecretProviderClass` object needs to be created in the `istio-system` names
 Run these commands from your Terraform folder:
 
 ```sh
-clusters=("<aks-cluster-two-name>" "<aks-cluster-one-name>")
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+
+clusters=($aksClusterOneName $aksClusterTwoName)
 for cluster in ${clusters[@]} ; do 
   kubectl create --context=$cluster namespace istio-system; 
 done
-terraform output -raw secret_provider_class_location_one | kubectl --context=<aks-cluster-one-name> -n istio-system apply -f -
-terraform output -raw secret_provider_class_location_two | kubectl --context=<aks-cluster-two-name> -n istio-system apply -f -
+terraform output -raw secret_provider_class_location_one | kubectl --context=$aksClusterOneName -n istio-system apply -f -
+terraform output -raw secret_provider_class_location_two | kubectl --context=$aksClusterTwoName -n istio-system apply -f -
 ```
 
 ## Install Istio in the clusters
@@ -135,30 +155,39 @@ terraform output -raw secret_provider_class_location_two | kubectl --context=<ak
 Let's create the `istio-ingress` namespace to install the [Istio Ingress Gateways](https://istio.io/latest/docs/tasks/traffic-management/ingress/ingress-control/) for the North/South traffic, and let's enable injection in this namespace.
 
 ```sh
-kubectl create --context=<aks-cluster-one-name> ns istio-ingress
-kubectl label --context=<aks-cluster-one-name> ns istio-ingress istio.io/rev=1-14-1
-kubectl create --context=<aks-cluster-two-name> ns istio-ingress
-kubectl label --context=<aks-cluster-two-name> ns istio-ingress istio.io/rev=1-14-1
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+istioRevision="1-14-1"
+
+kubectl create --context=$aksClusterOneName ns istio-ingress
+kubectl label --context=$aksClusterOneName ns istio-ingress istio.io/rev=$istioRevision
+kubectl create --context=$aksClusterTwoName ns istio-ingress
+kubectl label --context=$aksClusterTwoName ns istio-ingress istio.io/rev=$istioRevision
 ```
 
 We are now ready to install istio on both clusters:
 
 ```sh
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+istioRevision="1-14-1"
+tag="1.14.1"
+
 (cd istio-installation &&
 istioctl install -y \
-  --context=<aks-cluster-one-name> \
+  --context=$aksClusterOneName \
   --set profile=minimal \
-  --revision=1-14-1 \
-  --set tag=1.14.1 \
+  --revision=$istioRevision \
+  --set tag=$tag \
   -f 001-accessLogFile.yaml \
   -f 002-multicluster-region-one.yaml \
   -f 003-istiod-csi-secrets.yaml \
   -f 004-ingress-gateway.yaml &&
 istioctl install -y \
-  --context=<aks-cluster-two-name> \
+  --context=$aksClusterTwoName \
   --set profile=minimal \
-  --revision=1-14-1 \
-  --set tag=1.14.1 \
+  --revision=$istioRevision \
+  --set tag=$tag \
   -f 001-accessLogFile.yaml \
   -f 002-multicluster-region-two.yaml \
   -f 003-istiod-csi-secrets.yaml \
@@ -171,8 +200,11 @@ istioctl install -y \
 This step configures in each cluster the secret to reach the other one. Note that the Kubernetes secret contains also the cluster endpoint, it is like a `kubectl configuration`.
 
 ```sh
-istioctl x create-remote-secret --context=<aks-cluster-one-name> --name=<aks-cluster-one-name> | kubectl apply -f - --context=<aks-cluster-two-name>
-istioctl x create-remote-secret --context=<aks-cluster-two-name> --name=<aks-cluster-two-name> | kubectl apply -f - --context=<aks-cluster-one-name>
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+
+istioctl x create-remote-secret --context=$aksClusterOneName --name=$aksClusterOneName | kubectl apply -f - --context=$aksClusterTwoName
+istioctl x create-remote-secret --context=$aksClusterTwoName --name=$aksClusterTwoName | kubectl apply -f - --context=$aksClusterOneName
 ```
 
 ## Validate multicluster east west connectivity
@@ -180,11 +212,11 @@ istioctl x create-remote-secret --context=<aks-cluster-two-name> --name=<aks-clu
 At this point let's verify that the clusters are connected and synced:
 
 ```sh
-$ istioctl remote-clusters --context=<aks-cluster-two-name>
+$ istioctl remote-clusters --context=$aksClusterTwoName
 NAME               SECRET                                              STATUS     ISTIOD
 <aks-cluster-one-name>     istio-system/istio-remote-secret-<aks-cluster-one-name>     synced     istiod-1-14-1-689c9f5f7-n9r4p
 
-$ istioctl remote-clusters --context=<aks-cluster-one-name>
+$ istioctl remote-clusters --context=$aksClusterOneName
 NAME           SECRET                                          STATUS     ISTIOD
 <aks-cluster-two-name>     istio-system/istio-remote-secret-<aks-cluster-two-name>     synced     istiod-1-14-1-67d5b5fdfc-nm6w5
 ```
@@ -192,18 +224,22 @@ NAME           SECRET                                          STATUS     ISTIOD
 Let's deploy an EchoServer and let's access it from the other cluster. An EchoServer is an application that allows a client and a server to connect so a client can send a message to the server and the server can receive the message and send, or echo, it back to the client. Let's create a deployment called `echoserver` only in the first region. The service `echoserver` will be created in both regions, because this will make it possible to resolve the DNS name `echoserver`.
 
 ```sh
-kubectl create --context=<aks-cluster-one-name> ns echoserver
-kubectl label --context=<aks-cluster-one-name> ns echoserver istio.io/rev=1-14-1
-kubectl create --context=<aks-cluster-two-name> ns echoserver
-kubectl label --context=<aks-cluster-two-name> ns echoserver istio.io/rev=1-14-1
-kubectl apply --context=<aks-cluster-one-name> -n echoserver -f istio-installation/echoserver.yaml -f istio-installation/echoserver-svc.yaml
-kubectl apply --context=<aks-cluster-two-name> -n echoserver -f istio-installation/echoserver-svc.yaml
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+istioRevision="1-14-1"
+
+kubectl create --context=$aksClusterOneName ns echoserver
+kubectl label --context=$aksClusterOneName ns echoserver istio.io/rev=$istioRevision
+kubectl create --context=$aksClusterTwoName ns echoserver
+kubectl label --context=$aksClusterTwoName ns echoserver istio.io/rev=$istioRevision
+kubectl apply --context=$aksClusterOneName -n echoserver -f istio-installation/echoserver.yaml -f istio-installation/echoserver-svc.yaml
+kubectl apply --context=$aksClusterTwoName -n echoserver -f istio-installation/echoserver-svc.yaml
 ```
 
 Now let's access the `echoserver` from the remote cluster in the second region:
 
 ```sh
-kubectl run --context=<aks-cluster-two-name> -n echoserver -ti curlclient --image=nicolaka/netshoot /bin/bash
+kubectl run --context=$aksClusterTwoName -n echoserver -ti curlclient --image=nicolaka/netshoot /bin/bash
 $ curl echoserver:8080
 ```
 
@@ -366,9 +402,12 @@ The name `mykvsslcert` is going to be used later in the ingress annotations to r
 For the connection to the backend, we need the `application-gateway` to trust certificates emitted by the Istio CA, because we are going to use a Istio CA certificate for the `istio-ingressgateway` pod. To do this we add our `root-cert.pem` certificate to the `application-gateway`:
 
 ```sh
+applicationGatewayName="<application-gateway-name>"
+applicationGatewayResourceGroupName="<application-gateway-resource-group-name>"
+
  az network application-gateway root-cert create \
-  --gateway-name aks-agw-<region> \
-  --resource-group $aksResourceGroupName \
+  --gateway-name $applicationGatewayName \
+  --resource-group $applicationGatewayResourceGroupName \
   --name backend-tls \
   --cert-file root-cert.pem
 ```
@@ -397,12 +436,12 @@ az keyvault certificate import \
 We need to create a `SecretProviderClass` in the `istio-ingress` namespace to read this certificate from Kubernetes. We also need to patch the `ingressgateway` deployment to mount the certificate in the pods.
 
 ```sh
-terraform output -raw secret-provider-class-ingress | kubectl --context=<aks-cluster-one-name> -n istio-ingress apply -f -
+aksClusterOneName="<aks-cluster-one-name>"
 
+terraform output -raw secret-provider-class-ingress | kubectl --context=$aksClusterOneName -n istio-ingress apply -f -
 cd cd istio-installation
-
 istioctl install -y \
-  --context=<aks-cluster-one-name> \
+  --context=$aksClusterOneName \
   --set profile=minimal \
   --revision=1-14-1 \
   --set tag=1.14.1 \

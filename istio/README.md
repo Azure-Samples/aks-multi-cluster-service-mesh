@@ -82,13 +82,16 @@ This process is documented in detail in [Plug in CA Certificates](https://istio.
 The following script creates a root CA and certificate per each cluster.:
 
 ```sh
+aksClusterOneName="<aks-cluster-one-name>"
+aksClusterTwoName="<aks-cluster-two-name>"
+
 git clone git@github.com:istio/istio.git
 cd istio
 mkdir certs
 cd certs
 make -f ../tools/certs/Makefile.selfsigned.mk root-ca
-make -f ../tools/certs/Makefile.selfsigned.mk <aks-cluster-one-name>-cacerts
-make -f ../tools/certs/Makefile.selfsigned.mk <aks-cluster-two-name>-cacerts
+make -f ../tools/certs/Makefile.selfsigned.mk $aksClusterOneName-cacerts
+make -f ../tools/certs/Makefile.selfsigned.mk $aksClusterTwoName-cacerts
 ```
 
 ## Istio CA with Key Vault

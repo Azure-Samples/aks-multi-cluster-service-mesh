@@ -14,7 +14,7 @@ The infrastructure is composed of two regional sites each hosting an AKS cluster
   - `System` used by the AKS system node pool
   - `User` used by the AKS user node pool
   - `AppGateway` used by the Application Gateway
-  - `AzureBastionHost` used bu Azure Bastion
+  - `AzureBastionHost` used by Azure Bastion
   - `PrivateEndpoints` used by Azure Private Endpoints
 - A virtual network peering between the two regional virtual networks
 - A user-defined managed identity used as identity by the AKS cluster

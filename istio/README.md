@@ -136,7 +136,7 @@ certsDir="../certificates"
 cd $certsDir
 
 # Retrieve Azure Key Vault name
-keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
+keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [0].name --output tsv)
 
 # Store the root certificate to Azure Key Vault as a secret
 az keyvault secret set \

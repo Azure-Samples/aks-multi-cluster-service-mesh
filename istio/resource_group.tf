@@ -23,7 +23,7 @@ resource "azurerm_resource_group" "resource_group_two" {
 }
 
 resource "azurerm_resource_group" "resource_group_shared" {
-  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_two, "shared", "rg"])
+  name     = join("-", [var.name_prefix == null ? random_string.random.result : var.name_prefix, var.location_one, "shared", "rg"])
   location = var.location_one
   tags     = var.tags
 

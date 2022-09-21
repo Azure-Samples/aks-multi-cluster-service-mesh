@@ -3,10 +3,14 @@ output "random_prefix" {
   description = "Specifies the random value that is used as a prefix for the name of all the Azure resources when not explicitly defined in variables."
 }
 
-output "log_analytics_workspace_id" {
-  value = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].id : azurerm_log_analytics_workspace.log_analytics_workspace_one.id
+output "secret_provider_class_location_one" {
+  value = templatefile("secret_provider_class.tftpl", { aksName = module.aks_one.aks_name, clientId = module.aks_one.key_vault_secrets_provider.secret_identity[0].client_id, vaultName = azurerm_key_vault.key_vault.name, tenant = data.azurerm_client_config.current.tenant_id })
 }
 
-output "log_analytics_workspace_name" {
-  value = var.location_one != var.location_two ? azurerm_log_analytics_workspace.log_analytics_workspace_two[0].name : azurerm_log_analytics_workspace.log_analytics_workspace_one.name
+output "secret_provider_class_location_two" {
+  value = templatefile("secret_provider_class.tftpl", { aksName = module.aks_two.aks_name, clientId = module.aks_two.key_vault_secrets_provider.secret_identity[0].client_id, vaultName = azurerm_key_vault.key_vault.name, tenant = data.azurerm_client_config.current.tenant_id })
+}
+
+output "secret_provider_class_ingress" {
+  value = templatefile("secret_provider_class_ingress.tftpl", { clientId = module.aks_two.key_vault_secrets_provider.secret_identity[0].client_id, vaultName = azurerm_key_vault.key_vault.name, tenant = data.azurerm_client_config.current.tenant_id })
 }

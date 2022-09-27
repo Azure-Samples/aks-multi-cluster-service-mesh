@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Variables
-prefix="nucuqt"
-locationOne="westeurope"
-locationTwo="eastus2"
-sharedResourceGroupName="$prefix-$locationOne-shared-rg"
-aksClusterOneName="$prefix-$locationOne-aks-one"
-aksClusterTwoName="$prefix-$locationTwo-aks-two"
+prefix="zqsbwx"
+aksClusterOneLocation="westeurope"
+aksClusterTwoLocation="eastus2"
+sharedResourceGroupName="$prefix-$aksClusterOneLocation-shared-rg"
+aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
+aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
 clusters=($aksClusterOneName $aksClusterTwoName)
 certsDir="../certificates"
 

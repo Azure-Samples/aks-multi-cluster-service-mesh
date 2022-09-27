@@ -14,7 +14,7 @@ variable "location_one" {
 variable "location_two" {
   description = "The location of the second cluster and related resources."
   type        = string
-  default     = "eastus2"
+  default     = "eastus"
 }
 
 variable "admin_username" {
@@ -162,6 +162,12 @@ variable "user_agents_taints" {
   default     = []
 }
 
+variable "enable_node_public_ip" {
+  description = "(Optional) Should nodes in this Node Pool have a Public IP Address? Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "enable_ingress_application_gateway" {
   description = "Whether to deploy the Application Gateway ingress controller to this Kubernetes Cluster?"
   type        = bool
@@ -193,6 +199,12 @@ variable "identity_type" {
 
 variable "user_assigned_identity_id" {
   description = "(Optional) The ID of a user assigned identity."
+  type        = string
+  default     = null
+}
+
+variable "node_resource_group" {
+  description = "The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster."
   type        = string
   default     = null
 }

@@ -1,20 +1,22 @@
 #!/bin/bash
 
 # Variables
-prefix="nucuqt"
-locationOne="westeurope"
-locationTwo="eastus2"
-aksClusterOneName="$prefix-$locationOne-aks-one"
-aksClusterTwoName="$prefix-$locationTwo-aks-two"
-aksClusterOneResourceGroupName="$prefix-$locationOne-one-rg"
-aksClusterTwoResourceGroupName="$prefix-$locationTwo-two-rg"
+prefix="zqsbwx"
+aksClusterOneLocation="westeurope"
+aksClusterTwoLocation="eastus2"
+aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
+aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
+aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
+aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
 
 # Get credentials for AKS cluster one
 az aks get-credentials \
   --resource-group $aksClusterOneResourceGroupName \
-  --name $aksClusterOneName
+  --name $aksClusterOneName \
+  --overwrite-existing
 
 # Get credentials for AKS cluster two
 az aks get-credentials \
   --resource-group $aksClusterTwoResourceGroupName \
-  --name $aksClusterTwoName
+  --name $aksClusterTwoName \
+  --overwrite-existing

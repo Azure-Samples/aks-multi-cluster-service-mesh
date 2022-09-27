@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Variables
-prefix="nucuqt"
-locationOne="westeurope"
-locationTwo="eastus2"
-aksClusterOneName="$prefix-$locationOne-aks-one"
-aksClusterTwoName="$prefix-$locationTwo-aks-two"
+prefix="zqsbwx"
+aksClusterOneLocation="westeurope"
+aksClusterTwoLocation="eastus2"
+aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
+aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
 certsDir="../certificates"
 istioDir="../istio"
 

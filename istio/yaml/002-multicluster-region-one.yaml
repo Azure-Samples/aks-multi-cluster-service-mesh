@@ -5,6 +5,6 @@ spec:
     global:
       meshID: azure
       multiCluster:
-        clusterName: westeurope-aks
+        clusterName: aks-cluster-one
         enabled: true
       network: network1

@@ -318,10 +318,14 @@ aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
 aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
 
 # Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the first cluster
-istioctl x create-remote-secret --context=$aksClusterTwoName --name=$aksClusterTwoName | kubectl --context=$aksClusterOneName apply -f - 
+istioctl x create-remote-secret \
+  --context=$aksClusterTwoName \
+  --name=$aksClusterTwoName | kubectl --context=$aksClusterOneName apply -f - 
 
 # Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the second cluster
-istioctl x create-remote-secret --context=$aksClusterOneName --name=$aksClusterOneName | kubectl --context=$aksClusterTwoName apply -f -  
+istioctl x create-remote-secret \
+  --context=$aksClusterOneName \
+  --name=$aksClusterOneName | kubectl --context=$aksClusterTwoName apply -f -  
 ```
 
 ### Validate multicluster East-West connectivity
@@ -347,10 +351,10 @@ $ istioctl remote-clusters --context=$aksClusterTwoName
 If the validation succeeds, you should see an output like the following one:
 
 ```sh
-NAME                          SECRET                                                         STATUS     ISTIOD
-prefix-eastus2-aks-two        istio-system/istio-remote-secret-prefix-eastus2-aks-two        synced     istiod-1-14-1-db758fdc5-47g96
-NAME                          SECRET                                                         STATUS     ISTIOD
-prefix-westeurope-aks-one     istio-system/istio-remote-secret-prefix-westeurope-aks-one     synced     istiod-1-14-1-5df557b459-hkb8j
+NAME                      SECRET                                                      STATUS ISTIOD
+prefix-eastus2-aks-two    istio-system/istio-remote-secret-prefix-eastus2-aks-two     synced istiod-1-14-1-db758fdc5-47g96
+NAME                      SECRET                                                      STATUS ISTIOD
+prefix-westeurope-aks-one istio-system/istio-remote-secret-prefix-westeurope-aks-one  synced istiod-1-14-1-5df557b459-hkb8j
 ```
 
 ## Deploy a test application
@@ -404,16 +408,16 @@ command="curl echoserver:8080"
 result=$(kubectl get pod --namespace $namespace -o jsonpath="{.items[?(@.metadata.name=='$podName')].metadata.name}")
 
 if [[ -n $result ]]; then
-    echo "[$podName] pod already exists in the [$namespace] namespace"
+  echo "[$podName] pod already exists in the [$namespace] namespace"
 else
-    echo "[$podName] pod does not exist in the [$namespace] namespace"
-    echo "creating [$podName] pod in the [$namespace] namespace..."
-    kubectl run $podName --image=$imageName --namespace $namespace
+  echo "[$podName] pod does not exist in the [$namespace] namespace"
+  echo "creating [$podName] pod in the [$namespace] namespace..."
+  kubectl run $podName --image=$imageName --namespace $namespace
 
-    while [[ $(kubectl get pod --namespace $namespace -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
-        echo "waiting for [$podName] pod" 
-        sleep 1
-    done
+  while [[ $(kubectl get pod --namespace $namespace \-o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
+      echo "waiting for [$podName] pod" 
+      sleep 1
+  done
 fi
 
 # Invoke the echoserver as a local service

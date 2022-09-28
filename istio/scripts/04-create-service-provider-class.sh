@@ -1,16 +1,10 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-terraformDirectory=".."
-clusters=($aksClusterOneName $aksClusterTwoName)
+source ./00-variables.sh
 
 # Create istio-system namespace in AKS clusters
-for cluster in ${clusters[@]} ; do 
+for cluster in ${clusters[@]} ; do
   kubectl create --context=$cluster namespace istio-system
 done
 

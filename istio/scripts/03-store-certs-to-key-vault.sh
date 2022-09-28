@@ -1,14 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-sharedResourceGroupName="$prefix-$aksClusterOneLocation-shared-rg"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-clusters=($aksClusterOneName $aksClusterTwoName)
-certsDir="../certificates"
+source ./00-variables.sh
 
 # Change the working directory to the certificates folder
 cd $certsDir
@@ -38,7 +31,7 @@ for cluster in ${clusters[@]}; do
     --vault-name $keyVaultName \
     --name $cluster-cert-chain \
     --file cert-chain.pem
-  
+
   # Store the CA certificate to Azure Key Vault as a certificate
   az keyvault certificate import \
     --vault-name $keyVaultName \

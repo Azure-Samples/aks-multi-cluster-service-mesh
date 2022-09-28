@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterLocation="westeurope"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-terraformDirectory=".."
-yamlDir="yaml"
-istioRevision="1-14-1"
-tag="1.14.1"
+source ./00-variables.sh
 
 # Change the working directory to the Terraform folder
 cd $terraformDirectory

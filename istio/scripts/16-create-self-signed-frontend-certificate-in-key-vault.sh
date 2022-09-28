@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
+source ./00-variables.sh
+
 sharedResourceGroupLocation="westeurope"
 sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
 certificateName="frontend-certificate"

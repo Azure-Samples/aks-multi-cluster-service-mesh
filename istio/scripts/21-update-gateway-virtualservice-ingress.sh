@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Variables
-yamlDir="../yaml"
-prefix="ifwfhi"
-aksClusterOneLocation="westeurope"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
+source ./00-variables.sh
 
 # Change the working directory to the yaml folder
 cd $yamlDir

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Variables
+source ./00-variables.sh
+
 prefix="zqsbwx"
 aksClusterLocation="westeurope"
 sharedResourceGroupLocation="westeurope"
@@ -91,4 +93,4 @@ az network application-gateway ssl-cert create \
 # List the certificates to verify that the certificate was properly created
 az network application-gateway ssl-cert list \
   --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName 
+  --resource-group $aksClusterOneNodeResourceGroupName

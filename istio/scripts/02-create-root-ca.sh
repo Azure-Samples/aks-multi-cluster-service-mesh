@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-certsDir="../certificates"
-istioDir="../istio"
+source ./00-variables.sh
 
 # Clone the Istio GitHub repo locally
 git clone git@github.com:istio/istio.git $istioDir

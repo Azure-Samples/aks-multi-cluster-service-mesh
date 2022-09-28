@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterLocation="westeurope"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-applicationGatewayName="aks-appgw-$aksClusterLocation"
-certificateName="root-certificate"
-certificateFile="../certificates/$aksClusterOneName/root-cert.pem"
+source ./00-variables.sh
 
 # Get the name of the node resource group of the AKS cluster
 aksClusterOneNodeResourceGroupName=$(az aks show \
@@ -20,10 +14,10 @@ aksClusterOneNodeResourceGroupName=$(az aks show \
 az network application-gateway root-cert create \
   --gateway-name $applicationGatewayName \
   --resource-group $aksClusterOneNodeResourceGroupName \
-  --name $certificateName \
-  --cert-file $certificateFile
+  --name $rootCertificateName \
+  --cert-file $rootCertificateFile
 
 # List the certificates to verify that the certificate was properly created
 az network application-gateway root-cert list \
   --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName 
+  --resource-group $aksClusterOneNodeResourceGroupName

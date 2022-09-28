@@ -1,16 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-namespace="echoserver"
-podName="curlclient"
-containerName="curlclient"
-imageName="nginx"
-command="curl echoserver:8080"
+source ./00-variables.sh
 
 # Create pod if not exists
 result=$(kubectl get pod --context=$aksClusterTwoName --namespace $namespace -o jsonpath="{.items[?(@.metadata.name=='$podName')].metadata.name}")
@@ -22,8 +13,8 @@ else
     echo "creating [$podName] pod in the [$namespace] namespace..."
     kubectl run $podName --image=$imageName --namespace $namespace --context=$aksClusterTwoName
 
-    while [[ $(kubectl get pod --context=$aksClusterTwoName --namespace $namespace -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
-        echo "waiting for [$podName] pod" 
+    while [[ $(kubectl get pod --context=$aksClusterTwoName --namespace $namespace -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+        echo "waiting for [$podName] pod"
         sleep 1
     done
 fi
@@ -32,4 +23,4 @@ fi
 kubectl exec -it $podName --context=$aksClusterTwoName --namespace $namespace --container $containerName -- $command
 
 # Delete the pod
-kubectl delete pod $podName --context=$aksClusterTwoName --namespace $namespace 
+kubectl delete pod $podName --context=$aksClusterTwoName --namespace $namespace

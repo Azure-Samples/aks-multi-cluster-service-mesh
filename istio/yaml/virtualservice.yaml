@@ -4,6 +4,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: echoserver
+  namespace: istio-ingress
 spec:
   hosts:
     - x.x.x.x.nip.io

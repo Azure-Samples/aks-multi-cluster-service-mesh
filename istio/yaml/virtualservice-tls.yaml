@@ -4,6 +4,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: echoserver
+  namespace: istio-ingress
 spec:
   hosts:
     - 'echoserver.echoserver.svc.cluster.local'
@@ -16,6 +17,3 @@ spec:
     route:
     - destination:
         host: echoserver.echoserver.svc.cluster.local
-
-
-

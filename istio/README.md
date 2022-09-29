@@ -52,6 +52,40 @@ Change the working directory to the `istio` folder which contains Terraform modu
 terraform init -upgrade && terraform apply -var-file=terraform.tfvars
 ```
 
+Before starting, make sure to properly set values for the variables imported and used by all the scripts in the `00-variables.sh` file in the `scripts` folder.
+
+```sh
+# Variables
+prefix="<resource-prefix>"
+aksClusterOneLocation="<aks-location-one>"
+aksClusterTwoLocation="<aks-location-two>"
+aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
+aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
+aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
+aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
+sharedResourceGroupLocation="<shared-resource-group-location>"
+sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
+certsDir="../certificates"
+istioDir="../istio"
+scriptsDir="./scripts"
+clusters=($aksClusterOneName $aksClusterTwoName)
+terraformDirectory=".."
+istioRevision="1-14-1"
+yamlDir="../yaml"
+tag="1.14.1"
+namespace="echoserver"
+podName="curlclient"
+containerName="curlclient"
+imageName="nginx"
+command="curl echoserver:8080"
+certificateName="frontend-certificate"
+applicationGatewayName="aks-appgw-$aksClusterLocation"
+rootCertificateName="root-certificate"
+rootCertificateFile="../certificates/$aksClusterOneName/root-cert.pem"
+echoserverCertificateName="echoserver"
+echoserverDir="echoserver"
+```
+
 Use the `01-get-credentials.sh` script under the `istio/scripts` folder to get access credentials for the AKS clusters.
 
 ```sh

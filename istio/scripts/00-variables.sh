@@ -1,5 +1,4 @@
 # Variables
-
 prefix="<resource-prefix>"
 aksClusterOneLocation="<aks-location-one>"
 aksClusterTwoLocation="<aks-location-two>"
@@ -11,6 +10,7 @@ sharedResourceGroupLocation="<shared-resource-group-location>"
 sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
 certsDir="../certificates"
 istioDir="../istio"
+scriptsDir="./scripts"
 clusters=($aksClusterOneName $aksClusterTwoName)
 terraformDirectory=".."
 istioRevision="1-14-1"

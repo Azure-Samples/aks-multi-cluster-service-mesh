@@ -9,6 +9,10 @@ cd $certsDir
 # Retrieve Azure Key Vault name
 keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [0].name --output tsv)
 
+if [[ -z $keyVaultName ]]; then
+  echo "No Key Vault was found in $sharedResourceGroupName resource group."
+fi
+
 # Store the root certificate to Azure Key Vault as a secret
 az keyvault secret set \
   --vault-name $keyVaultName \

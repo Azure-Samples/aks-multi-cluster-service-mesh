@@ -21,3 +21,4 @@ az network application-gateway root-cert create \
 az network application-gateway root-cert list \
   --gateway-name  $applicationGatewayName \
   --resource-group $aksClusterOneNodeResourceGroupName
+  

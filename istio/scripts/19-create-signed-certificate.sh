@@ -54,3 +54,4 @@ az keyvault certificate import \
   --vault-name $keyVaultName \
   --name $echoserverCertificateName \
   --file echoserver.pfx
+  

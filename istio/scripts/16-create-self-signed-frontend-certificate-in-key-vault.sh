@@ -20,3 +20,4 @@ az keyvault certificate create \
   --vault-name $keyVaultName \
   --name $certificateName \
   --policy "$(az keyvault certificate get-default-policy --output json)"
+  

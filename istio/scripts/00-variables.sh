@@ -1,10 +1,10 @@
 # Variables
 
 # Edit the following
-prefix="mhhiuj"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-sharedResourceGroupLocation="westeurope"
+prefix="<resource-prefix>"
+aksClusterOneLocation="<aks-location-one>"
+aksClusterTwoLocation="<aks-location-two>"
+sharedResourceGroupLocation="<shared-resource-group-location>"
 
 # Edit if you want to modify this project to add new features:
 aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"

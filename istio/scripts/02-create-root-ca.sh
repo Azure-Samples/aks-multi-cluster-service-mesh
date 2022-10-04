@@ -5,7 +5,7 @@ source ./00-variables.sh
 
 # Clone the Istio GitHub repo locally
 ( cd ..
-curl https://storage.googleapis.com/istio-release/releases/1.14.4/istio-1.14.4-linux-amd64.tar.gz | tar -zxvf -
+curl https://storage.googleapis.com/istio-release/releases/$tag/istio-$tag-linux-amd64.tar.gz | tar -zxvf -
 )
 
 # Create CA certificates folder

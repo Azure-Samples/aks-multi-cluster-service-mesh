@@ -4,14 +4,14 @@
 source ./00-variables.sh
 
 # Change the working directory to the Terraform folder
+(
 cd $terraformDirectory
 
 # Create the SecretProviderClass object
 terraform output -raw secret_provider_class_ingress_one | kubectl --context=$aksClusterOneName apply -f -
+)
 
-# Change the working directory to the scripts folder
-cd $scriptsDir
-
+(
 # Change the working directory to the yaml folder
 cd $yamlDir
 
@@ -25,4 +25,4 @@ istioctl install -y \
   -f 002-multicluster-region-one.yaml \
   -f 003-istiod-csi-secrets.yaml \
   -f 004-ingress-gateway-csi.yaml # <-- note the "-csi" file
-  
+)

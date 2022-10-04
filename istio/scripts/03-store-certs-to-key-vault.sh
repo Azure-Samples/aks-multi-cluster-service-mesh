@@ -4,6 +4,7 @@
 source ./00-variables.sh
 
 # Change the working directory to the certificates folder
+(
 cd $certsDir
 
 # Retrieve Azure Key Vault name
@@ -44,3 +45,4 @@ for cluster in ${clusters[@]}; do
 
   cd ..
 done
+)

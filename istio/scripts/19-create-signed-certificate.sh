@@ -2,7 +2,7 @@
 
 # Variables
 source ./00-variables.sh
-
+(
 # Change the working directory to the certificates folder
 cd $certsDir
 
@@ -54,4 +54,4 @@ az keyvault certificate import \
   --vault-name $keyVaultName \
   --name $echoserverCertificateName \
   --file echoserver.pfx
-  
+)

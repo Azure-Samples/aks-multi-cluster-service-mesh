@@ -23,7 +23,7 @@ The infrastructure is composed of two regional sites each hosting an AKS cluster
   - `User` node pool hosting user workloads and artifacts.
 - An Azure Key Vault instance.
 - An Azure Bastion resource that provides secure and seamless SSH connectivity to the AKS agent nodes over SSL
-- An Azure Container Registry (ACR) to build, store, and manage container images and artifacts in a private registry for all types of container deployments. 
+- An Azure Container Registry (ACR) to build, store, and manage container images and artifacts in a private registry for all types of container deployments.
 - When the ACR SKU is equal to Premium:
   - The registry has two replicas, one in each region.
   - A Private Endpoint is created to allow the private AKS cluster to access ACR via a private IP address. For more information, see [Connect privately to an Azure container registry using Azure Private Link](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-private-link).
@@ -67,7 +67,6 @@ sharedResourceGroupLocation="<shared-resource-group-location>"
 sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
 certsDir="../certificates"
 istioDir="../istio"
-scriptsDir="./scripts"
 clusters=($aksClusterOneName $aksClusterTwoName)
 terraformDirectory=".."
 istioRevision="1-14-1"
@@ -127,7 +126,7 @@ In this section you will find scripts and steps to install `Istio` on the two cl
 
 ### Istio CA
 
-By default the Istio installation creates a self-signed Certification Authority (CA) along with a root certificate and key and uses them to sign the workload certificates. 
+By default the Istio installation creates a self-signed Certification Authority (CA) along with a root certificate and key and uses them to sign the workload certificates.
 Two Istio installations with two different self-signed CAs cannot trust each other.
 For this reason the first step to deploy Istio in multicluster is to create a Certification Authority that will be trusted by both clusters.
 
@@ -203,7 +202,7 @@ for cluster in ${clusters[@]}; do
     --vault-name $keyVaultName \
     --name $cluster-cert-chain \
     --file cert-chain.pem
-  
+
   # Store the CA certificate to Azure Key Vault as a certificate
   az keyvault certificate import \
     --vault-name $keyVaultName \
@@ -216,7 +215,7 @@ done
 
 ### Create the ServiceProviderClass
 
-The [Azure Key Vault Provider for Secrets Store CSI Driver](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-driver) allows for the integration of an Azure key vault as a secrets 
+The [Azure Key Vault Provider for Secrets Store CSI Driver](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-driver) allows for the integration of an Azure key vault as a secrets
 store with an Azure Kubernetes Service (AKS) cluster via a CSI volume.
 Now let's create a `SecretProviderClass` that will allow Istio to consume secrets from the Azure Key Vault.
 The `SecretProviderClass` object needs to be created in the `istio-system` namespace.
@@ -233,7 +232,7 @@ terraformDirectory=".."
 clusters=($aksClusterOneName $aksClusterTwoName)
 
 # Create istio-system namespace in AKS clusters
-for cluster in ${clusters[@]} ; do 
+for cluster in ${clusters[@]} ; do
   kubectl create --context=$cluster namespace istio-system
 done
 
@@ -264,7 +263,7 @@ You can optionally enable the [auto-completion option](https://istio.io/latest/d
 
 ### Install Istio in the clusters
 
-This sample will guide you through the necessary steps to install the Istio control plane on two AKS clusters, making each a primary cluster. 
+This sample will guide you through the necessary steps to install the Istio control plane on two AKS clusters, making each a primary cluster.
 Both clusters reside in their own virtual network in the same region or different regions.
 The two virtual networks are peered, meaning there is direct connectivity between the pods in both clusters.
 For more information on this Istio configuration, see [Install Multi-Primary](https://istio.io/latest/docs/setup/install/multicluster/multi-primary/).
@@ -354,12 +353,12 @@ aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
 # Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the first cluster
 istioctl x create-remote-secret \
   --context=$aksClusterTwoName \
-  --name=$aksClusterTwoName | kubectl --context=$aksClusterOneName apply -f - 
+  --name=$aksClusterTwoName | kubectl --context=$aksClusterOneName apply -f -
 
 # Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the second cluster
 istioctl x create-remote-secret \
   --context=$aksClusterOneName \
-  --name=$aksClusterOneName | kubectl --context=$aksClusterTwoName apply -f -  
+  --name=$aksClusterOneName | kubectl --context=$aksClusterTwoName apply -f -
 ```
 
 ### Validate multicluster East-West connectivity
@@ -448,8 +447,8 @@ else
   echo "creating [$podName] pod in the [$namespace] namespace..."
   kubectl run $podName --image=$imageName --namespace $namespace
 
-  while [[ $(kubectl get pod --namespace $namespace \-o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
-      echo "waiting for [$podName] pod" 
+  while [[ $(kubectl get pod --namespace $namespace \-o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+      echo "waiting for [$podName] pod"
       sleep 1
   done
 fi
@@ -458,7 +457,7 @@ fi
 kubectl exec -it $podName --context=$aksClusterTwoName --namespace $namespace --container $containerName -- $command
 
 # Delete the pod
-kubectl delete pod $podName --context=$aksClusterTwoName --namespace $namespace 
+kubectl delete pod $podName --context=$aksClusterTwoName --namespace $namespace
 ```
 
 ### Expose the Istio ingress gateway
@@ -752,7 +751,7 @@ az network application-gateway ssl-cert create \
 # List the certificates to verify that the certificate was properly created
 az network application-gateway ssl-cert list \
   --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName 
+  --resource-group $aksClusterOneNodeResourceGroupName
 ```
 
 We'll use the name of the frontend certificate (`frontend-certificate`) later in the ingress annotations to reference this certificate.
@@ -789,7 +788,7 @@ az network application-gateway root-cert create \
 # List the certificates to verify that the certificate was properly created
 az network application-gateway root-cert list \
   --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName 
+  --resource-group $aksClusterOneNodeResourceGroupName
 ```
 
 The name `root-certificate` will be used later in the ingress annotations to reference this certificate. Now we can generate a x509 certificate signed by the Istio CA and upload it to Azure Key Vault:
@@ -825,7 +824,7 @@ openssl req \
   -keyout echoserver.echoserver.svc.cluster.local.key \
   -subj "/CN=echoserver.echoserver.svc.cluster.local/O=Istio Services"
 
-# Sign the certificate with the root-cert.pem CA certificate 
+# Sign the certificate with the root-cert.pem CA certificate
 openssl x509 \
   -req \
   -sha256 \
@@ -957,5 +956,5 @@ aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
 curl --kv https://$(kubectl get ingress -n istio-ingress --context=$aksClusterOneName istio-ingress-application-gateway -o json | jq -r '.status.loadBalancer.ingress[0].ip').nip.io
 ```
 
-> **NOTE**  
+> **NOTE**
 > The `-k` parameter in curl is needed because we used a self-signed certificate in the Application Gateway listener.

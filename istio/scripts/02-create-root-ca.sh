@@ -12,7 +12,9 @@ if [ ! -d $certsDir ]; then
 fi
 
 # Create CA certificates
+(
 cd $certsDir
 make -f ../istio/tools/certs/Makefile.selfsigned.mk root-ca
 make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterOneName-cacerts
 make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterTwoName-cacerts
+)

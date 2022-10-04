@@ -1,18 +1,22 @@
 # Variables
+
+# Edit the following
 prefix="<resource-prefix>"
 aksClusterOneLocation="<aks-location-one>"
 aksClusterTwoLocation="<aks-location-two>"
+sharedResourceGroupLocation="<shared-resource-group-location>"
+
+# Edit if you want to modify this project to add new features:
 aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
 aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
 aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
 aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
-sharedResourceGroupLocation="<shared-resource-group-location>"
 sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
+terraformDirectory=".."
 certsDir="../certificates"
 istioDir="../istio"
-scriptsDir="./scripts"
+yamlDir="../yaml"
 clusters=($aksClusterOneName $aksClusterTwoName)
-terraformDirectory=".."
 istioRevision="1-14-1"
 yamlDir="../yaml"
 tag="1.14.1"

@@ -9,6 +9,7 @@ for cluster in ${clusters[@]} ; do
 done
 
 # Change the working directory to the Terraform folder
+(
 cd $terraformDirectory
 
 # Create SecretProviderClass in the istio-system namespace in the first cluster
@@ -16,3 +17,4 @@ terraform output -raw secret_provider_class_location_one | kubectl --context=$ak
 
 # Create SecretProviderClass in the istio-system namespace in the second cluster
 terraform output -raw secret_provider_class_location_two | kubectl --context=$aksClusterTwoName -n istio-system apply -f -
+)

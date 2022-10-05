@@ -1,12 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-istioRevision="1-14-1"
+source ./00-variables.sh
 
 # Create the istio-ingress namespace in the first cluster
 kubectl create --context=$aksClusterOneName namespace istio-ingress

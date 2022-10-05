@@ -1,18 +1,10 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterLocation="westeurope"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-sharedResourceGroupLocation="westeurope"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-certificateName="echoserver"
-certificatesDir="../certificates"
-echoserverDir="echoserver"
-
+source ./00-variables.sh
+(
 # Change the working directory to the certificates folder
-cd $certificatesDir
+cd $certsDir
 
 # Create CA certificates folder
 if [ ! -d $echoserverDir ]; then
@@ -30,7 +22,7 @@ openssl req \
   -keyout echoserver.echoserver.svc.cluster.local.key \
   -subj "/CN=echoserver.echoserver.svc.cluster.local/O=Istio Services"
 
-# Sign the certificate with the root-cert.pem CA certificate 
+# Sign the certificate with the root-cert.pem CA certificate
 openssl x509 \
   -req \
   -sha256 \
@@ -60,5 +52,6 @@ fi
 # Import the certificate in Azure Key Vault
 az keyvault certificate import \
   --vault-name $keyVaultName \
-  --name $certificateName \
+  --name $echoserverCertificateName \
   --file echoserver.pfx
+)

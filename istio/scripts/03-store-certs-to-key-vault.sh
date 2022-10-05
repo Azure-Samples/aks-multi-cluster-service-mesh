@@ -1,20 +1,18 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-sharedResourceGroupName="$prefix-$aksClusterOneLocation-shared-rg"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-clusters=($aksClusterOneName $aksClusterTwoName)
-certsDir="../certificates"
+source ./00-variables.sh
 
 # Change the working directory to the certificates folder
+(
 cd $certsDir
 
 # Retrieve Azure Key Vault name
 keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [0].name --output tsv)
+
+if [[ -z $keyVaultName ]]; then
+  echo "No Key Vault was found in $sharedResourceGroupName resource group."
+fi
 
 # Store the root certificate to Azure Key Vault as a secret
 az keyvault secret set \
@@ -38,7 +36,7 @@ for cluster in ${clusters[@]}; do
     --vault-name $keyVaultName \
     --name $cluster-cert-chain \
     --file cert-chain.pem
-  
+
   # Store the CA certificate to Azure Key Vault as a certificate
   az keyvault certificate import \
     --vault-name $keyVaultName \
@@ -47,3 +45,4 @@ for cluster in ${clusters[@]}; do
 
   cd ..
 done
+)

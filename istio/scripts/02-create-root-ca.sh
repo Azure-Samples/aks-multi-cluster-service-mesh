@@ -1,16 +1,12 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-certsDir="../certificates"
-istioDir="../istio"
+source ./00-variables.sh
 
 # Clone the Istio GitHub repo locally
-git clone git@github.com:istio/istio.git $istioDir
+( cd ..
+curl https://storage.googleapis.com/istio-release/releases/$tag/istio-$tag-linux-amd64.tar.gz | tar -zxvf -
+)
 
 # Create CA certificates folder
 if [ ! -d $certsDir ]; then
@@ -18,7 +14,9 @@ if [ ! -d $certsDir ]; then
 fi
 
 # Create CA certificates
+(
 cd $certsDir
-make -f ../istio/tools/certs/Makefile.selfsigned.mk root-ca
-make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterOneName-cacerts
-make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterTwoName-cacerts
+make -f $istioDir/tools/certs/Makefile.selfsigned.mk root-ca
+make -f $istioDir/tools/certs/Makefile.selfsigned.mk $aksClusterOneName-cacerts
+make -f $istioDir/tools/certs/Makefile.selfsigned.mk $aksClusterTwoName-cacerts
+)

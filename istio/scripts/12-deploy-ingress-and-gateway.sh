@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-yamlDir="../yaml"
+source ./00-variables.sh
 
 # Deploy the Istio gateway to the istio-ingress namespace in the first cluster
 kubectl apply --context=$aksClusterOneName -f $yamlDir/gateway.yaml

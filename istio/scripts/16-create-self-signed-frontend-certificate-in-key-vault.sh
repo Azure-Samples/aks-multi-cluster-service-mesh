@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
+source ./00-variables.sh
+
 sharedResourceGroupLocation="westeurope"
 sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
 certificateName="frontend-certificate"
@@ -19,3 +20,4 @@ az keyvault certificate create \
   --vault-name $keyVaultName \
   --name $certificateName \
   --policy "$(az keyvault certificate get-default-policy --output json)"
+  

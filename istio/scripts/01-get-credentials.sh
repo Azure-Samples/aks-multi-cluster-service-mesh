@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterOneLocation="westeurope"
-aksClusterTwoLocation="eastus2"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
-aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
+source ./00-variables.sh
 
 # Get credentials for AKS cluster one
 az aks get-credentials \

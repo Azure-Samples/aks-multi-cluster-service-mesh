@@ -1,14 +1,7 @@
 #!/bin/bash
 
 # Variables
-prefix="zqsbwx"
-aksClusterLocation="westeurope"
-sharedResourceGroupLocation="westeurope"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-applicationGatewayName="aks-appgw-$aksClusterLocation"
-certificateName="frontend-certificate"
+source ./00-variables.sh
 
 # Retrieve Azure Key Vault name from the shared resource group
 export keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
@@ -46,7 +39,7 @@ agicIdentityPrincipalId=$(az identity show \
 az identity create \
   --name appgw-id \
   --resource-group $aksClusterOneResourceGroupName \
-  --location $aksClusterLocation
+  --location $aksClusterOneLocation
 
 # Retrieve the resource id of the managed identity
 identityID=$(az identity show \
@@ -91,4 +84,4 @@ az network application-gateway ssl-cert create \
 # List the certificates to verify that the certificate was properly created
 az network application-gateway ssl-cert list \
   --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName 
+  --resource-group $aksClusterOneNodeResourceGroupName

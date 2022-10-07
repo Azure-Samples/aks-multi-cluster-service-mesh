@@ -1,19 +1,11 @@
-# https://istio.io/latest/docs/setup/additional-setup/gateway/
 ---
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
-metadata:
-  name: ingress
 spec:
-  profile: empty # Do not install CRDs or the control plane
   components:
-    ingressGateways:
-    - name: ingressgateway
-      namespace: istio-ingress
+    pilot:
       enabled: true
       k8s:
-        service:
-          type: ClusterIP
         affinity:
           nodeAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
@@ -37,13 +29,3 @@ spec:
                   operator: In
                   values:
                   - linux
-      label:
-        # Set a unique label for the gateway. This is required to ensure Gateways
-        # can select this workload
-        istio: ingressgateway
-  values:
-    gateways:
-      istio-ingressgateway:
-        # Enable gateway injection
-        injectionTemplate: gateway
-

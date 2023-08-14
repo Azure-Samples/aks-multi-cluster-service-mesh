@@ -1,8 +1,15 @@
+data "azurerm_subnet" "pe" {
+  name                 = "PrivateEndpoints"
+  virtual_network_name = module.network_one.vnet_name
+  resource_group_name  = azurerm_resource_group.resource_group_one.name
+  depends_on           = [module.network_one]
+}
+
 resource "azurerm_private_endpoint" "container_registry_private_endpoint" {
   name                = var.name_prefix == null ? "${random_string.random.result}-acr-private-endpoint" : "${var.name_prefix}-acr-private-endpoint"
   location            = azurerm_resource_group.resource_group_shared.location
   resource_group_name = azurerm_resource_group.resource_group_shared.name
-  subnet_id           = module.network_one.vnet_subnets[4]
+  subnet_id           = data.azurerm_subnet.pe.id
   tags                = var.tags
 
   private_service_connection {
@@ -28,7 +35,7 @@ resource "azurerm_private_endpoint" "key_vault_private_endpoint" {
   name                = var.name_prefix == null ? "${random_string.random.result}-key-vault-private-endpoint" : "${var.name_prefix}-key-vault-private-endpoint"
   location            = azurerm_resource_group.resource_group_shared.location
   resource_group_name = azurerm_resource_group.resource_group_shared.name
-  subnet_id           = module.network_one.vnet_subnets[4]
+  subnet_id           = data.azurerm_subnet.pe.id
   tags                = var.tags
 
   private_service_connection {

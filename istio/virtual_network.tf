@@ -1,5 +1,6 @@
 module "network_one" {
   source              = "Azure/network/azurerm"
+  version             = "5.3.0"
   vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_one}-vnet-one" : "${var.name_prefix}-${var.location_one}-vnet-one"
   resource_group_name = azurerm_resource_group.resource_group_one.name
   address_spaces      = var.vnet_one_address_space
@@ -9,10 +10,12 @@ module "network_one" {
   subnet_enforce_private_link_endpoint_network_policies = {
     "subnet1" : true
   }
+  use_for_each = true
 }
 
 module "network_two" {
   source              = "Azure/network/azurerm"
+  version             = "5.3.0"
   vnet_name           = var.name_prefix == null ? "${random_string.random.result}-${var.location_two}-vnet-two" : "${var.name_prefix}-${var.location_two}-vnet-two"
   resource_group_name = azurerm_resource_group.resource_group_two.name
   address_spaces      = var.vnet_two_address_space
@@ -22,6 +25,7 @@ module "network_two" {
   subnet_enforce_private_link_endpoint_network_policies = {
     "subnet1" : true
   }
+  use_for_each = true
 }
 
 resource "azurerm_virtual_network_peering" "one-to-two" {

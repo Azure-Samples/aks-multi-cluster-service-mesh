@@ -15,6 +15,20 @@ resource "azurerm_public_ip" "public_ip_one" {
   }
 }
 
+data "azurerm_subnet" "bastionone" {
+  name                 = "AzureBastionSubnet"
+  virtual_network_name = module.network_one.vnet_name
+  resource_group_name  = azurerm_resource_group.resource_group_one.name
+  depends_on           = [module.network_one]
+}
+
+data "azurerm_subnet" "bastiontwo" {
+  name                 = "AzureBastionSubnet"
+  virtual_network_name = module.network_two.vnet_name
+  resource_group_name  = azurerm_resource_group.resource_group_two.name
+  depends_on           = [module.network_two]
+}
+
 resource "azurerm_bastion_host" "bastion_host_one" {
   count = var.bastion_host_enabled ? 1 : 0
 
@@ -25,7 +39,7 @@ resource "azurerm_bastion_host" "bastion_host_one" {
 
   ip_configuration {
     name                 = "configuration"
-    subnet_id            = module.network_one.vnet_subnets[3]
+    subnet_id            = data.azurerm_subnet.bastionone.id
     public_ip_address_id = azurerm_public_ip.public_ip_one[0].id
   }
 
@@ -135,7 +149,7 @@ resource "azurerm_bastion_host" "bastion_host_two" {
 
   ip_configuration {
     name                 = "configuration"
-    subnet_id            = module.network_two.vnet_subnets[3]
+    subnet_id            = data.azurerm_subnet.bastiontwo.id
     public_ip_address_id = azurerm_public_ip.public_ip_two[0].id
   }
 

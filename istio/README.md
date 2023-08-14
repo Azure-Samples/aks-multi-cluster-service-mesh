@@ -52,63 +52,11 @@ Change the working directory to the `istio` folder which contains Terraform modu
 terraform init -upgrade && terraform apply -var-file=terraform.tfvars
 ```
 
-Before starting, make sure to properly set values for the variables imported and used by all the scripts in the `00-variables.sh` file in the `scripts` folder.
+Before starting, make sure to properly set values for the variables imported and used by all the scripts in the [00-variables.sh](scripts/00-variables.sh) file in the `scripts` folder.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
-aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
-sharedResourceGroupLocation="<shared-resource-group-location>"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-certsDir="../certificates"
-istioDir="../istio"
-clusters=($aksClusterOneName $aksClusterTwoName)
-terraformDirectory=".."
-istioRevision="1-14-1"
-yamlDir="../yaml"
-tag="1.14.1"
-namespace="echoserver"
-podName="curlclient"
-containerName="curlclient"
-imageName="nginx"
-command="curl echoserver:8080"
-certificateName="frontend-certificate"
-applicationGatewayName="aks-appgw-$aksClusterLocation"
-rootCertificateName="root-certificate"
-rootCertificateFile="../certificates/$aksClusterOneName/root-cert.pem"
-echoserverCertificateName="echoserver"
-echoserverDir="echoserver"
-```
+Use the [01-get-credentials.sh](scripts/01-get-credentials.sh) script under the `istio/scripts` folder to get access credentials for the AKS clusters.
 
-Use the `01-get-credentials.sh` script under the `istio/scripts` folder to get access credentials for the AKS clusters.
-
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-aksClusterOneResourceGroupName="$prefix-$aksClusterOneLocation-one-rg"
-aksClusterTwoResourceGroupName="$prefix-$aksClusterTwoLocation-two-rg"
-
-# Get credentials for AKS cluster one
-az aks get-credentials \
-  --resource-group $aksClusterOneResourceGroupName \
-  --name $aksClusterOneName \
-  --overwrite-existing
-
-# Get credentials for AKS cluster two
-az aks get-credentials \
-  --resource-group $aksClusterTwoResourceGroupName \
-  --name $aksClusterTwoName \
-  --overwrite-existing
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/01-get-credentials.sh#L1-L16
 
 You can test credentials by running the following script:
 
@@ -132,86 +80,15 @@ For this reason the first step to deploy Istio in multicluster is to create a Ce
 
 This process is documented in detail in [Plug in CA Certificates](https://istio.io/latest/docs/tasks/security/cert-management/plugin-ca-cert/)
 
-The `02-create-root-ca.sh` script under the `istio/scripts` folder creates a root CA and certificate per each cluster.:
+The [02-create-root-ca.sh](scripts/02-create-root-ca.sh) script under the `istio/scripts` folder creates a root CA and certificate per each cluster.:
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-certsDir="../certificates"
-istioDir="../istio"
-
-# Clone the Istio GitHub repo locally
-git clone git@github.com:istio/istio.git $istioDir
-
-# Create CA certificates folder
-if [ ! -d $certsDir ]; then
-  mkdir $certsDir
-fi
-
-# Create CA certificates
-cd $certsDir
-make -f ../istio/tools/certs/Makefile.selfsigned.mk root-ca
-make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterOneName-cacerts
-make -f ../istio/tools/certs/Makefile.selfsigned.mk $aksClusterTwoName-cacerts
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/02-create-root-ca.sh#L1-L18
 
 ### Istio CA with Key Vault
 
-You can run the `03-store-certs-to-key-vault.sh` script under the `istio/scripts` folder to store the cluster certificates we created at the previous step into Azure Key Vault.
+You can run the [03-store-certs-to-key-vault.sh](scripts/03-store-certs-to-key-vault.sh) script under the `istio/scripts` folder to store the cluster certificates we created at the previous step into Azure Key Vault.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-sharedResourceGroupName="$prefix-$aksClusterOneLocation-shared-rg"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-clusters=($aksClusterOneName $aksClusterTwoName)
-certsDir="../certificates"
-
-# Change the working directory to the certificates folder
-cd $certsDir
-
-# Retrieve Azure Key Vault name
-keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [0].name --output tsv)
-
-# Store the root certificate to Azure Key Vault as a secret
-az keyvault secret set \
-  --vault-name $keyVaultName \
-  --name root-cert \
-  --file root-cert.pem
-
-for cluster in ${clusters[@]}; do
-  cd $cluster
-
-  # Create a PFX certificate using the CA certificate and private key
-  openssl pkcs12 \
-    -inkey ca-key.pem \
-    -in ca-cert.pem \
-    -export \
-    -passout pass: \
-    -out ca-cert-and-key.pfx
-
-  # Store the root certificate chain to Azure Key Vault as a secret
-  az keyvault secret set \
-    --vault-name $keyVaultName \
-    --name $cluster-cert-chain \
-    --file cert-chain.pem
-
-  # Store the CA certificate to Azure Key Vault as a certificate
-  az keyvault certificate import \
-    --vault-name $keyVaultName \
-    --name $cluster-ca-cert \
-    --file ca-cert-and-key.pfx
-
-  cd ..
-done
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/03-store-certs-to-key-vault.sh#L1-L42
 
 ### Create the ServiceProviderClass
 
@@ -219,45 +96,24 @@ The [Azure Key Vault Provider for Secrets Store CSI Driver](https://learn.micros
 store with an Azure Kubernetes Service (AKS) cluster via a CSI volume.
 Now let's create a `SecretProviderClass` that will allow Istio to consume secrets from the Azure Key Vault.
 The `SecretProviderClass` object needs to be created in the `istio-system` namespace.
-Run the `04-create-service-provider-class.sh` script under the `istio/scripts` folder to create the `istio-system namespace` and `SecretProviderClass` entity in each AKS cluster:
+Run the  [04-create-service-provider-class.sh](scripts/04-create-service-provider-class.sh) script under the `istio/scripts` folder to create the `istio-system namespace` and `SecretProviderClass` entity in each AKS cluster:
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-terraformDirectory=".."
-clusters=($aksClusterOneName $aksClusterTwoName)
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/04-create-service-provider-class.sh#L1-L20
 
-# Create istio-system namespace in AKS clusters
-for cluster in ${clusters[@]} ; do
-  kubectl create --context=$cluster namespace istio-system
-done
+### Create the istio-ingress namespace
 
-# Change the working directory to the Terraform folder
-cd $terraformDirectory
+Let's create the `istio-ingress` namespace to install the [Istio Ingress Gateways](https://istio.io/latest/docs/tasks/traffic-management/ingress/ingress-control/) for the North/South traffic, and let's enable injection in this namespace.
 
-# Create SecretProviderClass in the istio-system namespace in the first cluster
-terraform output -raw secret_provider_class_location_one | kubectl --context=$aksClusterOneName -n istio-system apply -f -
+Create the `istio-ingress` namespace running [05-create-istio-ingress-ns.sh](scripts/05-create-istio-ingress-ns.sh)
 
-# Create SecretProviderClass in the istio-system namespace in the second cluster
-terraform output -raw secret_provider_class_location_two | kubectl --context=$aksClusterTwoName -n istio-system apply -f -
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/05-create-istio-ingress-ns.sh#L1-L16
 
 ### Install Istioctl
 
 Before installing Istio on AKS cluster, mek sure to install [istioctl](https://istio.io/latest/docs/reference/commands/istioctl/) command line utility for service operators to debug and diagnose their Istio mesh.
-For more information, see [Install istioctl](https://istio.io/latest/docs/ops/diagnostic-tools/istioctl/#install-hahahugoshortcode-s2-hbhb). You can install the `istioctl` binary using the `06-install-istioctl.sh` script in the `scripts` folder:
+For more information, see [Install istioctl](https://istio.io/latest/docs/ops/diagnostic-tools/istioctl/#install-hahahugoshortcode-s2-hbhb). You can install the `istioctl` binary using the [06-install-istioctl.sh](scripts/06-install-istioctl.sh) script in the `scripts` folder:
 
-```sh
-# Download istioctl
-curl -sL https://istio.io/downloadIstioctl | sh -
-
-# Add the `istioctl` client to your path, on a macOS or Linux system
-export PATH=$HOME/.istioctl/bin:$PATH
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/06-install-istioctl.sh#L1-L6
 
 You can optionally enable the [auto-completion option](https://istio.io/latest/docs/ops/diagnostic-tools/istioctl/#enabling-auto-completion) when working with a bash or ZSH console.
 
@@ -270,68 +126,9 @@ For more information on this Istio configuration, see [Install Multi-Primary](ht
 
 ![Multi-Primary Installation](../images/multi-primary-istio.png)
 
-Let's create the `istio-ingress` namespace to install the [Istio Ingress Gateways](https://istio.io/latest/docs/tasks/traffic-management/ingress/ingress-control/) for the North/South traffic, and let's enable injection in this namespace.
+We are now ready to install istio on both clusters using `istioctl`. For more information, see [Install with Istioctl](https://istio.io/latest/docs/setup/install/istioctl/). Run the [07-install-istio.sh](scripts/07-install-istio.sh) script.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-istioRevision="1-14-1"
-
-# Create the istio-ingress namespace in the first cluster
-kubectl create --context=$aksClusterOneName namespace istio-ingress
-
-# Enable automatic Istio sidecar injection for the istio-ingress namespace in the first cluster
-kubectl label --context=$aksClusterOneName namespace istio-ingress istio.io/rev=$istioRevision
-
-# Create the istio-ingress namespace in the second cluster
-kubectl create --context=$aksClusterTwoName namespace istio-ingress
-
-# Enable automatic Istio sidecar injection for the istio-ingress namespace in the second cluster
-kubectl label --context=$aksClusterTwoName namespace istio-ingress istio.io/rev=$istioRevision
-```
-
-We are now ready to install istio on both clusters using `istioctl`. For more information, see [Install with Istioctl](https://istio.io/latest/docs/setup/install/istioctl/):
-
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-yamlDir="../yaml"
-istioRevision="1-14-1"
-tag="1.14.1"
-
-# Change the working directory to the yaml folder
-cd $yamlDir
-
-# Install Istio on cluster one
-istioctl install -y \
-  --context=$aksClusterOneName \
-  --set profile=minimal \
-  --revision=$istioRevision \
-  --set tag=$tag \
-  -f 001-accessLogFile.yaml \
-  -f 002-multicluster-region-one.yaml \
-  -f 003-istiod-csi-secrets.yaml \
-  -f 004-ingress-gateway.yaml
-
-# Install Istio on cluster two
-istioctl install -y \
-  --context=$aksClusterTwoName \
-  --set profile=minimal \
-  --revision=$istioRevision \
-  --set tag=$tag \
-  -f 001-accessLogFile.yaml \
-  -f 002-multicluster-region-two.yaml \
-  -f 003-istiod-csi-secrets.yaml \
-  -f 004-ingress-gateway.yaml
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/07-install-istio.sh#L1-L32
 
 ### Configure secrets for the remote endpoints
 
@@ -341,45 +138,17 @@ To attach the remote cluster to its control plane, we give the control plane in 
 - Enables discovery of service endpoints running in the remote cluster.
 
 This step configures in each cluster the secret to reach the other one. Note that the Kubernetes secret contains also the cluster endpoint, it is like a `kubectl configuration`.
-You can use the `08-configure-remote-endpoint-secret.sh` script in the `scripts` folder to create the secrets in the AKS clusters.
+You can use the [08-configure-remote-endpoint-secret.sh](scripts/08-configure-remote-endpoint-secret.sh) script in the `scripts` folder to create the secrets in the AKS clusters.
 
-```sh
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-
-# Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the first cluster
-istioctl x create-remote-secret \
-  --context=$aksClusterTwoName \
-  --name=$aksClusterTwoName | kubectl --context=$aksClusterOneName apply -f -
-
-# Create a secret with credentials to allow Istio to access remote Kubernetes API servers in the second cluster
-istioctl x create-remote-secret \
-  --context=$aksClusterOneName \
-  --name=$aksClusterOneName | kubectl --context=$aksClusterTwoName apply -f -
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/08-configure-remote-endpoint-secret.sh#L1-L10
 
 ### Validate multicluster East-West connectivity
 
 Now we can verify that the multicluster Istio installation is working properly and cluster are connected to each other.
-You can use the `09-validate-istio-multicluster.sh` script in the `scripts` folder to accomplish this verification.
+You can use the [09-validate-istio-multicluster.sh](scripts/09-validate-istio-multicluster.sh) script in the `scripts` folder to accomplish this verification.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/09-validate-istio-multicluster.sh#L1-L10
 
-# Lists the remote clusters the first cluster is connected to
-$ istioctl remote-clusters --context=$aksClusterOneName
-
-# Lists the remote clusters the second cluster is connected to
-$ istioctl remote-clusters --context=$aksClusterTwoName
-```
 
 If the validation succeeds, you should see an output like the following one:
 
@@ -396,69 +165,14 @@ Let's deploy an `echoserver` and let's access it from the other cluster. An `ech
 
 ### Create deployment and services
 
-You can use the `10-deploy-echoserver.sh` script in the `scripts` folder to create the deployment
+You can use the [10-deploy-echoserver.sh](scripts/10-deploy-echoserver.sh) script in the `scripts` folder to create the deployment
 
-```sh
-# Variables
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-yamlDir="../yaml"
-istioRevision="1-14-1"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/10-deploy-echoserver.sh#L1-L23
 
-# Create echoserver namespace in the first cluster
-kubectl create --context=$aksClusterOneName namespace echoserver
+You can run the [11-call-echoserver-service-from-cluster-two.sh](scripts/11-call-echoserver-service-from-cluster-two.sh) script in the `scripts` folder to call the `echoserver` service from the remote cluster in the second region:
 
-# Enable automatic Istio sidecar injection for the echoserver namespace in the first cluster
-kubectl label --context=$aksClusterOneName namespace echoserver istio.io/rev=$istioRevision
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/11-call-echoserver-service-from-cluster-two.sh#L1-L26
 
-# Create the echoserver deployment and service in the echoserver namespace in the first cluster
-kubectl apply --context=$aksClusterOneName -n echoserver -f $yamlDir/echoserver.yaml -f $yamlDir/echoserver-svc.yaml
-
-# Create echoserver namespace in the second cluster
-kubectl create --context=$aksClusterTwoName namespace echoserver
-
-# Enable automatic Istio sidecar injection for the echoserver namespace in the second cluster
-kubectl label --context=$aksClusterTwoName namespace echoserver istio.io/rev=$istioRevision
-
-# Create the echoserver service in the echoserver namespace in the second cluster
-kubectl apply --context=$aksClusterTwoName -n echoserver -f $yamlDir/echoserver-svc.yaml
-```
-
-You can run the `11-call-echoserver-service-from-cluster-two.sh` script in the `scripts` folder to call the `echoserver` service from the remote cluster in the second region:
-
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterTwoLocation="<aks-location-two>"
-aksClusterTwoName="$prefix-$aksClusterTwoLocation-aks-two"
-namespace="echoserver"
-podName="curlclient"
-containerName="curlclient"
-imageName="nginx"
-command="curl echoserver:8080"
-
-# Create pod if not exists
-result=$(kubectl get pod --namespace $namespace -o jsonpath="{.items[?(@.metadata.name=='$podName')].metadata.name}")
-
-if [[ -n $result ]]; then
-  echo "[$podName] pod already exists in the [$namespace] namespace"
-else
-  echo "[$podName] pod does not exist in the [$namespace] namespace"
-  echo "creating [$podName] pod in the [$namespace] namespace..."
-  kubectl run $podName --image=$imageName --namespace $namespace
-
-  while [[ $(kubectl get pod --namespace $namespace \-o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
-      echo "waiting for [$podName] pod"
-      sleep 1
-  done
-fi
-
-# Invoke the echoserver as a local service
-kubectl exec -it $podName --context=$aksClusterTwoName --namespace $namespace --container $containerName -- $command
-
-# Delete the pod
-kubectl delete pod $podName --context=$aksClusterTwoName --namespace $namespace
-```
 
 ### Expose the Istio ingress gateway
 
@@ -515,32 +229,15 @@ spec:
 In a production environment we strongly recommend to configure the `ingress` object to expose the service via `HTTPS` with a TLS certificate and related host.
 In the next section, we'll see how to expose the `echoserver` service via `HTTPS` using another ingress object.
 
-You can use the `12-deploy-ingress-and-gateway.sh` script in the `scripts` folder to deploy the ingress and gateway object to the `echoserver` namespace in the first cluster.
+You can use the [12-deploy-ingress-and-gateway.sh](scripts/12-deploy-ingress-and-gateway.sh) script in the `scripts` folder to deploy the ingress and gateway object to the `echoserver` namespace in the first cluster.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-yamlDir="../yaml"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/12-deploy-ingress-and-gateway.sh#L1-L10
 
-# Deploy the Istio gateway to the istio-ingress namespace in the first cluster
-kubectl apply --context=$aksClusterOneName -f $yamlDir/gateway.yaml
-
-# Deploy the ingress to the echoserver namespace in the first cluster
-kubectl apply --context=$aksClusterOneName -f $yamlDir/ingress.yaml
-```
 
 The gateway object that we just created is responsible to create a load balancer and expose ports, but it0s not responsible for request routing.
-You can call the public endpoint exposed by the ingress object using the `13-call-echoserver-without-virtual-service.sh` script in the `scripts` folder.
+You can call the public endpoint exposed by the ingress object using the [13-call-echoserver-without-virtual-service.sh](scripts/13-call-echoserver-without-virtual-service.sh) script in the `scripts` folder.
 
-```sh
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-
-curl -v $(kubectl get ingress -n istio-ingress --context=$aksClusterOneName istio-ingress-application-gateway -o json | jq -r '.status.loadBalancer.ingress[0].ip')
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/13-call-echoserver-without-virtual-service.sh#L1-L7
 
 The `curl` call will reach the Istio ingress gateway which will not be able to route the request to the downstream `echoserver` service.
 Hence, the call will fail with a `HTTP 404 Not Found` error.
@@ -588,31 +285,16 @@ spec:
 This sample makes use of the [nip.io](https://nip.io/) free service which allows to map any IP Address to a hostname using the different formats which includes mapping a public IP `a.b.c.d` to the hostname `a.b.c.d.nip.io`.
 The [nip.io](https://nip.io/) service makes it easy to quickly have a public DNS name for any IP address for troubleshooting and testing purposes.
 
-You can use the `14-deploy-virtual-service.sh` script in the `scripts` folder to create a VirtualService in the `istio-ingress` namespace.
+You can use the [14-deploy-virtual-service.sh](scripts/14-deploy-virtual-service.sh) script in the `scripts` folder to create a VirtualService in the `istio-ingress` namespace.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-yamlDir="../yaml"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/14-deploy-virtual-service.sh#L1-L8
 
-cat $yamlDir/virtualservice.yaml | sed -e "s/x.x.x.x/$(kubectl get ingress --context=$aksClusterOneName -n istio-ingress istio-ingress-application-gateway -o json | jq -r '.status.loadBalancer.ingress[0].ip')/" |
-kubectl apply -f -
-```
 
 ### Call the echoserver via HTTP
 
-Now you can call the `echoserver` service via HTTP using the `15-call-echoserver-via-http.sh` script in the `scripts` folder.
+Now you can call the `echoserver` service via HTTP using the [15-call-echoserver-via-http.sh](scripts/15-call-echoserver-via-http.sh) script in the `scripts` folder.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-
-curl -v $(kubectl get ingress -n istio-ingress --context=$aksClusterOneName istio-ingress-application-gateway -o json | jq -r '.status.loadBalancer.ingress[0].ip').nip.io
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/15-call-echoserver-via-http.sh#L1-L7
 
 In this section, we configured the following artifacts:
 
@@ -631,286 +313,39 @@ For simplicity, we are going to show the steps only for the one of the two clust
 
 ### Frontend certificate
 
-The frontend certificate is the certificate the Application Gateway listener will use to encrypt and protect the communications with clients over the Internet. For testing purposes, you can use the `16-create-self-signed-frontend-certificate-in-key-vault.sh` script in the `scripts` folder to create a self-signed certificate in our Azure Key Vault.
+The frontend certificate is the certificate the Application Gateway listener will use to encrypt and protect the communications with clients over the Internet. For testing purposes, you can use the [16-create-self-signed-frontend-certificate-in-key-vault.sh](scripts/16-create-self-signed-frontend-certificate-in-key-vault.sh) script in the `scripts` folder to create a self-signed certificate in our Azure Key Vault.
 
-```sh
-prefix="<resource-prefix>"
-sharedResourceGroupLocation="<aks-location-one>"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-name="frontend-certificate"
-
-# Retrieve Azure Key Vault name from the shared resource group
-export keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
-
-if [[ -z $keyVaultName ]]; then
-    echo "There is no Key Vault resource in $sharedResourceGroupName resource group"
-    exit -1
-fi
-
-# Create self-signed frontend certificate
-az keyvault certificate create \
-  --vault-name $keyVaultName \
-  --name $name \
-  --policy "$(az keyvault certificate get-default-policy --output json)"
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/16-create-self-signed-frontend-certificate-in-key-vault.sh#L1-L22
 
 The above steps create a certificate with `CN=CLIGetDefaultPolicy`. You can modify the default-policy to change the parameters of the frontend certificate.
 In a production environment, you should import a digital certificate issued by a well-known certificate authority (CA) into Azure Key Vault using the [az keyvault certificate import](https://learn.microsoft.com/en-us/cli/azure/keyvault/certificate?view=azure-cli-latest#az-keyvault-certificate-import) command.
 
-Now we can import the certificate from Azure Key Vault into the Application Gateway. To do this we also need to make sure the Application Gateway has the permission to read secrets from the Azure Key Vault.
+Now we can import the certificate from Azure Key Vault into the Application Gateway. To do this we also need to make sure the Application Gateway has the permission to read secrets from the Azure Key Vault. Run the script [17-import-frontend-certificate-into-app-gateway.sh](scripts/17-import-frontend-certificate-into-app-gateway.sh).
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterLocation="<aks-location-one>"
-sharedResourceGroupLocation="<shared-resource-group-location>"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-applicationGatewayName="aks-appgw-$aksClusterLocation"
-certificateName="frontend-certificate"
-
-# Retrieve Azure Key Vault name from the shared resource group
-export keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
-
-if [[ -z $keyVaultName ]]; then
-    echo "There is no Key Vault resource in $sharedResourceGroupName resource group"
-    exit -1
-fi
-
-# Get the versioned secret id of the frontend certificate in key vault
-versionedSecretId=$(az keyvault certificate show \
-  --name $certificateName \
-  --vault-name $keyVaultName \
-  --query sid \
-  --output tsv)
-
-# Get the unversioned secret id of the frontend certificate in key vault
-unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5)
-
-# Get the name of the node resource group of the AKS cluster
-aksClusterOneNodeResourceGroupName=$(az aks show \
-  --name $aksClusterOneName \
-  --resource-group $aksClusterOneResourceGroupName \
-  --query nodeResourceGroup \
-  --output tsv)
-
-# Get principalId of the AGIC managed identity
-agicIdentityPrincipalId=$(az identity show \
-  --name ingressapplicationgateway-$aksClusterOneName \
-  --resource-group $aksClusterOneNodeResourceGroupName \
-  --query principalId \
-  --output tsv)
-
-# Create user-assigned managed identity for the application gateway
-az identity create \
-  --name appgw-id \
-  --resource-group $aksClusterOneResourceGroupName \
-  --location $aksClusterLocation
-
-# Retrieve the resource id of the managed identity
-identityID=$(az identity show \
-  --name appgw-id \
-  --resource-group $aksClusterOneResourceGroupName \
-  --output tsv \
-  --query "id")
-
-# Retrieve the principal id of the managed identity
-identityPrincipal=$(az identity show \
-  --name appgw-id \
-  --resource-group $aksClusterOneResourceGroupName \
-  --output tsv \
-  --query "principalId")
-
-# One time operation, assign AGIC identity to have operator access over AppGw identity
-az role assignment create \
-  --role "Managed Identity Operator" \
-  --assignee $agicIdentityPrincipalId \
-  --scope $identityID
-
-# One time operation, assign the identity to Application Gateway
-az network application-gateway identity assign \
-  --gateway-name $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName \
-  --identity $identityID
-
-# One time operation, assign the identity GET secret access to Azure Key Vault
-az keyvault set-policy \
-  --name $keyVaultName \
-  --resource-group $sharedResourceGroupName \
-  --object-id $identityPrincipal \
-  --secret-permissions get
-
-# Now that the application-gateway can read secrets from Azure Key Vault we can import the certificate
-az network application-gateway ssl-cert create \
-  --name $certificateName \
-  --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName \
-  --key-vault-secret-id $unversionedSecretId
-
-# List the certificates to verify that the certificate was properly created
-az network application-gateway ssl-cert list \
-  --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/17-import-frontend-certificate-into-app-gateway.sh#L1-L88
 
 We'll use the name of the frontend certificate (`frontend-certificate`) later in the ingress annotations to reference this certificate.
 
 ### Backend certificate
 
 For the connection to the backend, we need the Azure Application Gateway to trust certificates emitted by the Istio CA, because we are going to use a Istio CA certificate for the `istio-ingressgateway` pods.
-We can use the `18-add-istio-ca-certificate-to-application-gateway.sh` script in the `scripts` folder to import the `root-cert.pem` certificate to the Azure Application Gateway as a root certificate:
+We can use the [18-add-istio-ca-certificate-to-application-gateway.sh](scripts/18-add-istio-ca-certificate-to-application-gateway.sh) script in the `scripts` folder to import the `root-cert.pem` certificate to the Azure Application Gateway as a root certificate:
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterLocation="<aks-location-one>"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-applicationGatewayName="aks-appgw-$aksClusterLocation"
-certificateName="root-certificate"
-certificateFile="../certificates/$aksClusterOneName/root-cert.pem"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/18-add-istio-ca-certificate-to-application-gateway.sh#L1-23
 
-# Get the name of the node resource group of the AKS cluster
-aksClusterOneNodeResourceGroupName=$(az aks show \
-  --name $aksClusterOneName \
-  --resource-group $aksClusterOneResourceGroupName \
-  --query nodeResourceGroup \
-  --output tsv)
+The name `root-certificate` will be used later in the ingress annotations to reference this certificate. Now we can generate a x509 certificate signed by the Istio CA and upload it to Azure Key Vault, using the [19-create-signed-certificate.sh](scripts/19-create-signed-certificate.sh) script.
 
-# Import the backend certificate from file into Application Gateway
-az network application-gateway root-cert create \
-  --gateway-name $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName \
-  --name $certificateName \
-  --cert-file $certificateFile
-
-# List the certificates to verify that the certificate was properly created
-az network application-gateway root-cert list \
-  --gateway-name  $applicationGatewayName \
-  --resource-group $aksClusterOneNodeResourceGroupName
-```
-
-The name `root-certificate` will be used later in the ingress annotations to reference this certificate. Now we can generate a x509 certificate signed by the Istio CA and upload it to Azure Key Vault:
-
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterLocation="<aks-location-one>"
-sharedResourceGroupLocation="<shared-resource-group-location>"
-aksClusterOneResourceGroupName="$prefix-$aksClusterLocation-one-rg"
-aksClusterOneName="$prefix-$aksClusterLocation-aks-one"
-sharedResourceGroupName="$prefix-$sharedResourceGroupLocation-shared-rg"
-certificateName="echoserver"
-certificatesDir="../certificates"
-echoserverDir="echoserver"
-
-# Change the working directory to the certificates folder
-cd $certificatesDir
-
-# Create CA certificates folder
-if [ ! -d $echoserverDir ]; then
-  mkdir $echoserverDir
-fi
-
-# Change the working directory to the echoserver folder
-cd $echoserverDir
-
-# Generate a new certificate for the echoserver service in the echoserver namespace
-openssl req \
-  -out echoserver.echoserver.svc.cluster.local.csr \
-  -newkey rsa:2048 \
-  -nodes \
-  -keyout echoserver.echoserver.svc.cluster.local.key \
-  -subj "/CN=echoserver.echoserver.svc.cluster.local/O=Istio Services"
-
-# Sign the certificate with the root-cert.pem CA certificate
-openssl x509 \
-  -req \
-  -sha256 \
-  -days 365 \
-  -CA ../root-cert.pem \
-  -CAkey ../root-key.pem \
-  -set_serial 1 \
-  -in echoserver.echoserver.svc.cluster.local.csr  \
-  -out echoserver.echoserver.svc.cluster.local.pem
-
-# Create a PFX certificate using the certificate and private key
-openssl pkcs12 \
-  -inkey echoserver.echoserver.svc.cluster.local.key \
-  -in echoserver.echoserver.svc.cluster.local.pem \
-  -export \
-  -passout pass: \
-  -out echoserver.pfx
-
-# Retrieve Azure Key Vault name from the shared resource group
-export keyVaultName=$(az keyvault list --resource-group $sharedResourceGroupName --query [].name --output tsv)
-
-if [[ -z $keyVaultName ]]; then
-    echo "There is no Key Vault resource in $sharedResourceGroupName resource group"
-    exit -1
-fi
-
-# Import the certificate in Azure Key Vault
-az keyvault certificate import \
-  --vault-name $keyVaultName \
-  --name $certificateName \
-  --file echoserver.pfx
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/19-create-signed-certificate.sh#L1-L57
 
 ### Configure Istio for HTTPS endpoint
 
-Then we need to create a `SecretProviderClass` in the `istio-ingress` namespace to read this certificate from Kubernetes. We also need to patch the `ingressgateway` deployment to mount the certificate in the pods. You can use the `20-create-and-install-objects-for-https.sh` script in the `scripts` folder to perform these steps.
+Then we need to create a `SecretProviderClass` in the `istio-ingress` namespace to read this certificate from Kubernetes. We also need to patch the `ingressgateway` deployment to mount the certificate in the pods. You can use the [20-create-and-install-objects-for-https.sh](scripts/20-create-and-install-objects-for-https.sh) script in the `scripts` folder to perform these steps.
 
-```sh
-aksClusterOneName="<aks-cluster-one-name>"
-yamlDir="../yaml"
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/20-create-and-install-objects-for-https.sh#L1-L28
 
-terraform output -raw secret-provider-class-ingress | kubectl --context=$aksClusterOneName -n istio-ingress apply -f -
-cd $yamlDir
+Now that all the certificates needed are in place, we can patch our existing `gateway`, `virtualService` and `ingress` to use TLS. You can use the [21-update-gateway-virtualservice-ingress.sh](scripts/21-update-gateway-virtualservice-ingress.sh) script in the `scripts` folder to perform these steps.
 
-# Generate an Istio install manifest and apply it to a cluster
-# Variables
-prefix="<resource-prefix>"
-aksClusterLocation="<aks-location-one>"
-terraformDirectory=".."
-yamlDir="yaml"
-istioRevision="1-14-1"
-tag="1.14.1"
-
-# Change the working directory to the Terraform folder
-cd $terraformDirectory
-
-# Create the SecretProviderClass object
-terraform output -raw secret_provider_class_ingress_one | kubectl --context=$aksClusterOneName apply -f -
-
-# Change the working directory to the yaml folder
-cd $yamlDir
-
-# Generate an Istio install manifest and apply it to a cluster
-istioctl install -y \
-  --context=$aksClusterOneName \
-  --set profile=minimal \
-  --revision=$istioRevision \
-  --set tag=$tag \
-  -f 001-accessLogFile.yaml \
-  -f 002-multicluster-region-one.yaml \
-  -f 003-istiod-csi-secrets.yaml \
-  -f 004-ingress-gateway-csi.yaml # <-- note the "-csi" file
-```
-
-Now that all the certificates needed are in place, we can patch our existing `gateway`, `virtualService` and `ingress` to use TLS. You can use the `221-update-gateway-virtualservice-ingress.sh` script in the `scripts` folder to perform these steps.
-
-```sh
-# Variables
-yamlDir="../yaml"
-
-# Change the working directory to the yaml folder
-cd $yamlDir
-
-# Update gateway, virtualservice, and ingress
-kubectl apply -f gateway-tls.yaml -f virtualservice-tls.yaml -f ingress-tls-e2e.yaml
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/21-update-gateway-virtualservice-ingress.sh#L1-L12
 
 if you look at the `ingress-tls-e2e.yaml` in the `yaml` folder you will note that the ingress objects uses the [annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/) of the [Azure Application Gateway Ingress Controller](https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview) to control the configuration of listeners, backend pools, and backend settings created by the controller.
 
@@ -945,16 +380,9 @@ spec:
 
 ### Call the echoserver via HTTPS
 
-Now you can call the `echoserver` service via HTTPS using the `22-call-echoserver-via-https.sh` script in the `scripts` folder.
+Now you can call the `echoserver` service via HTTPS using the [22-call-echoserver-via-https.sh](scripts/22-call-echoserver-via-https.sh) script in the `scripts` folder.
 
-```sh
-# Variables
-prefix="<resource-prefix>"
-aksClusterOneLocation="<aks-location-one>"
-aksClusterOneName="$prefix-$aksClusterOneLocation-aks-one"
-
-curl --kv https://$(kubectl get ingress -n istio-ingress --context=$aksClusterOneName istio-ingress-application-gateway -o json | jq -r '.status.loadBalancer.ingress[0].ip').nip.io
-```
+https://github.com/Azure-Samples/aks-multi-cluster-service-mesh/blob/0655ce19e05b044edf4b9aa4251a9807de8dbf85/istio/scripts/22-call-echoserver-via-https.sh#L1-L7
 
 > **NOTE**
 > The `-k` parameter in curl is needed because we used a self-signed certificate in the Application Gateway listener.
